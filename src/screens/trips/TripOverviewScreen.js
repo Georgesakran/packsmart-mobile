@@ -146,10 +146,17 @@ export default function TripOverviewScreen({ route, navigation }) {
             <Text style={styles.actionSubtitle}>Manage suitcases and bag roles</Text>
             </Pressable>
 
-          <Pressable style={styles.actionCard}>
-            <Text style={styles.actionTitle}>Items</Text>
-            <Text style={styles.actionSubtitle}>Review and edit trip items</Text>
-          </Pressable>
+            <Pressable
+              style={styles.actionCard}
+              onPress={() =>
+                navigation.navigate("TripItems", {
+                  tripId,
+                })
+              }
+            >
+              <Text style={styles.actionTitle}>Items</Text>
+              <Text style={styles.actionSubtitle}>Review and edit trip items</Text>
+            </Pressable>
 
           <Pressable style={styles.actionCard}>
             <Text style={styles.actionTitle}>Checklist</Text>
