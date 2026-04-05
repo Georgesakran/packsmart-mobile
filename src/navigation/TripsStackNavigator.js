@@ -2,6 +2,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import TripsListScreen from "../screens/trips/TripsListScreen";
 import TripOverviewScreen from "../screens/trips/TripOverviewScreen";
+import TripBagsScreen from "../screens/trips/TripBagsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -17,6 +18,11 @@ export default function TripsStackNavigator() {
         name="TripOverview"
         component={TripOverviewScreen}
         options={{ title: "Trip Overview" }}
+      />
+      <Stack.Screen
+        name="TripBags"
+        component={TripBagsScreen}
+        options={{ title: "Trip Bags" }}
       />
     </Stack.Navigator>
   );

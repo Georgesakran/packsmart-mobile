@@ -10,7 +10,7 @@ import {
   getTripSuitcases,
 } from "../../api/tripApi";
 
-export default function TripOverviewScreen({ route }) {
+export default function TripOverviewScreen({ route, navigation }) {
   const { tripId } = route.params || {};
 
   const [loading, setLoading] = useState(true);
@@ -134,10 +134,17 @@ export default function TripOverviewScreen({ route }) {
         </View>
 
         <View style={styles.actionsGrid}>
-          <Pressable style={styles.actionCard}>
+            <Pressable
+            style={styles.actionCard}
+            onPress={() =>
+                navigation.navigate("TripBags", {
+                tripId,
+                })
+            }
+            >
             <Text style={styles.actionTitle}>Bags</Text>
             <Text style={styles.actionSubtitle}>Manage suitcases and bag roles</Text>
-          </Pressable>
+            </Pressable>
 
           <Pressable style={styles.actionCard}>
             <Text style={styles.actionTitle}>Items</Text>

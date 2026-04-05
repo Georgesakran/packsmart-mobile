@@ -4,7 +4,7 @@ const TEMP_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJ
 
 const client = axios.create({
   baseURL: "https://packsmart-backend.onrender.com/api",
-  timeout: 15000,
+  timeout: 30000,
 });
 
 client.interceptors.request.use(
