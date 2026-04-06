@@ -135,15 +135,15 @@ export default function TripOverviewScreen({ route, navigation }) {
 
         <View style={styles.actionsGrid}>
             <Pressable
-            style={styles.actionCard}
-            onPress={() =>
-                navigation.navigate("TripBags", {
-                tripId,
-                })
-            }
+              style={styles.actionCard}
+              onPress={() =>
+                  navigation.navigate("TripBags", {
+                  tripId,
+                  })
+              }
             >
-            <Text style={styles.actionTitle}>Bags</Text>
-            <Text style={styles.actionSubtitle}>Manage suitcases and bag roles</Text>
+              <Text style={styles.actionTitle}>Bags</Text>
+              <Text style={styles.actionSubtitle}>Manage suitcases and bag roles</Text>
             </Pressable>
 
             <Pressable
@@ -158,10 +158,17 @@ export default function TripOverviewScreen({ route, navigation }) {
               <Text style={styles.actionSubtitle}>Review and edit trip items</Text>
             </Pressable>
 
-          <Pressable style={styles.actionCard}>
-            <Text style={styles.actionTitle}>Checklist</Text>
-            <Text style={styles.actionSubtitle}>Track packing progress</Text>
-          </Pressable>
+            <Pressable
+              style={styles.actionCard}
+              onPress={() =>
+                navigation.navigate("TripChecklist", {
+                  tripId,
+                })
+              }
+            >
+              <Text style={styles.actionTitle}>Checklist</Text>
+              <Text style={styles.actionSubtitle}>Track packing progress</Text>
+            </Pressable>
 
           <Pressable style={styles.actionCard}>
             <Text style={styles.actionTitle}>Travel Day</Text>
