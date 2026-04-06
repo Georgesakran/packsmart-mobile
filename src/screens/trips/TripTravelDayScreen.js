@@ -1,13 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import AppScreen from "../../components/common/AppScreen";
+import AppCard from "../../components/common/AppCard";
+import AppButton from "../../components/common/AppButton";
+import StatusBadge from "../../components/common/StatusBadge";
+import SectionHeader from "../../components/common/SectionHeader";
+import EmptyState from "../../components/common/EmptyState";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { getTripById, getTripItems } from "../../api/tripApi";
@@ -139,88 +143,79 @@ export default function TripTravelDayScreen({ route }) {
     };
   }, [filteredItems]);
 
+  const getModeTone = (mode) => {
+    if (mode === "wear_on_travel_day") return "info";
+    if (mode === "keep_accessible") return "success";
+    return "neutral";
+  };
+
+  const getModeLabel = (mode) => {
+    if (mode === "wear_on_travel_day") return "Wear Today";
+    if (mode === "keep_accessible") return "Accessible";
+    return "Normal";
+  };
+
   const renderItemCard = (item) => (
-    <View key={item.id} style={styles.itemCard}>
+    <AppCard key={item.id}>
       <View style={styles.itemTopRow}>
         <View style={styles.itemInfo}>
           <Text style={styles.itemTitle}>
             {item.displayName} × {item.quantity || 1}
           </Text>
 
-          <View style={styles.metaRow}>
-            <Text style={styles.metaText}>
-              <Text style={styles.metaLabel}>Priority: </Text>
-              {item.priority || "recommended"}
-            </Text>
-          </View>
-
-          <View style={styles.metaRow}>
-            <Text style={styles.metaText}>
-              <Text style={styles.metaLabel}>Bag: </Text>
-              {item.assigned_bag_name && item.assigned_bag_role
-                ? `${item.assigned_bag_name} (${item.assigned_bag_role})`
-                : item.preferredBagRole
-                ? `Auto / preferred: ${item.preferredBagRole}`
-                : "Auto"}
-            </Text>
-          </View>
-        </View>
-
-        <View
-          style={[
-            styles.modeBadge,
-            item.travelDayMode === "wear_on_travel_day"
-              ? styles.modeWearBadge
-              : item.travelDayMode === "keep_accessible"
-              ? styles.modeAccessibleBadge
-              : styles.modeNormalBadge,
-          ]}
-        >
-          <Text
-            style={[
-              styles.modeBadgeText,
-              item.travelDayMode === "wear_on_travel_day"
-                ? styles.modeWearBadgeText
-                : item.travelDayMode === "keep_accessible"
-                ? styles.modeAccessibleBadgeText
-                : styles.modeNormalBadgeText,
-            ]}
-          >
-            {item.travelDayMode === "wear_on_travel_day"
-              ? "Wear Today"
-              : item.travelDayMode === "keep_accessible"
-              ? "Accessible"
-              : "Normal"}
+          <Text style={styles.itemSubText}>
+            Priority: {item.priority || "recommended"}
           </Text>
         </View>
+
+        <StatusBadge
+          label={getModeLabel(item.travelDayMode)}
+          tone={getModeTone(item.travelDayMode)}
+        />
       </View>
 
-      <View style={styles.actionsRow}>
-        <Pressable
-          style={styles.secondaryButton}
+      <View style={styles.metaGroup}>
+        <Text style={styles.metaText}>
+          <Text style={styles.metaLabel}>Bag: </Text>
+          {item.assigned_bag_name && item.assigned_bag_role
+            ? `${item.assigned_bag_name} (${item.assigned_bag_role})`
+            : item.preferredBagRole
+            ? `Auto / preferred: ${item.preferredBagRole}`
+            : "Auto"}
+        </Text>
+
+        <Text style={styles.metaText}>
+          <Text style={styles.metaLabel}>Category: </Text>
+          {item.category || "Not set"}
+        </Text>
+      </View>
+
+      <View style={styles.actionsGrid}>
+        <AppButton
+          title="Wear Today"
+          variant="secondary"
           disabled={updatingItemId === item.id}
           onPress={() => updateTravelDayMode(item.id, "wear_on_travel_day")}
-        >
-          <Text style={styles.secondaryButtonText}>Wear on Travel Day</Text>
-        </Pressable>
+          style={styles.actionButton}
+        />
 
-        <Pressable
-          style={styles.secondaryButton}
+        <AppButton
+          title="Accessible"
+          variant="secondary"
           disabled={updatingItemId === item.id}
           onPress={() => updateTravelDayMode(item.id, "keep_accessible")}
-        >
-          <Text style={styles.secondaryButtonText}>Keep Accessible</Text>
-        </Pressable>
+          style={styles.actionButton}
+        />
 
-        <Pressable
-          style={styles.normalButton}
+        <AppButton
+          title="Set Normal"
+          variant="secondary"
           disabled={updatingItemId === item.id}
           onPress={() => updateTravelDayMode(item.id, "normal")}
-        >
-          <Text style={styles.normalButtonText}>Set Normal</Text>
-        </Pressable>
+          style={styles.fullWidthAction}
+        />
       </View>
-    </View>
+    </AppCard>
   );
 
   if (loading) {
@@ -229,16 +224,6 @@ export default function TripTravelDayScreen({ route }) {
         <View style={styles.centerBlock}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.helperText}>Loading travel day plan...</Text>
-        </View>
-      </AppScreen>
-    );
-  }
-
-  if (error && items.length === 0) {
-    return (
-      <AppScreen>
-        <View style={styles.centerBlock}>
-          <Text style={styles.errorText}>{error}</Text>
         </View>
       </AppScreen>
     );
@@ -254,8 +239,23 @@ export default function TripTravelDayScreen({ route }) {
             Decide what to wear, what to keep close, and what stays packed.
           </Text>
 
-          <View style={styles.summaryCard}>
-            <Text style={styles.sectionTitle}>Travel Day Summary</Text>
+          {actionMessage ? (
+            <AppCard style={styles.successCard}>
+              <Text style={styles.successText}>{actionMessage}</Text>
+            </AppCard>
+          ) : null}
+
+          {error ? (
+            <AppCard style={styles.errorCard}>
+              <Text style={styles.errorText}>{error}</Text>
+            </AppCard>
+          ) : null}
+
+          <AppCard>
+            <SectionHeader
+              title="Travel Day Summary"
+              subtitle="A quick view of what is worn, accessible, or left as normal."
+            />
 
             <View style={styles.summaryGrid}>
               <View style={styles.summaryMiniCard}>
@@ -282,144 +282,89 @@ export default function TripTravelDayScreen({ route }) {
                 <Text style={styles.summaryMiniValue}>{summary.normalCount}</Text>
               </View>
             </View>
-          </View>
+          </AppCard>
 
-          {actionMessage ? (
-            <View style={styles.successCard}>
-              <Text style={styles.successText}>{actionMessage}</Text>
-            </View>
-          ) : null}
-
-          {error ? (
-            <View style={styles.errorCard}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
-
-          <View style={styles.filtersCard}>
-            <Text style={styles.sectionTitle}>Filters</Text>
+          <AppCard>
+            <SectionHeader
+              title="Filters"
+              subtitle="Focus on the items you want to review now."
+            />
 
             <View style={styles.filtersRow}>
-              <Pressable
-                style={[
-                  styles.filterChip,
-                  filter === "all" && styles.filterChipActive,
-                ]}
+              <AppButton
+                title="All"
+                variant={filter === "all" ? "primary" : "secondary"}
                 onPress={() => setFilter("all")}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    filter === "all" && styles.filterChipTextActive,
-                  ]}
-                >
-                  All
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.filterChip,
-                  filter === "wear_on_travel_day" && styles.filterChipActive,
-                ]}
+                style={styles.filterButton}
+              />
+              <AppButton
+                title="Wear Today"
+                variant={filter === "wear_on_travel_day" ? "primary" : "secondary"}
                 onPress={() => setFilter("wear_on_travel_day")}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    filter === "wear_on_travel_day" && styles.filterChipTextActive,
-                  ]}
-                >
-                  Wear Today
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.filterChip,
-                  filter === "keep_accessible" && styles.filterChipActive,
-                ]}
+                style={styles.filterButton}
+              />
+              <AppButton
+                title="Accessible"
+                variant={filter === "keep_accessible" ? "primary" : "secondary"}
                 onPress={() => setFilter("keep_accessible")}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    filter === "keep_accessible" && styles.filterChipTextActive,
-                  ]}
-                >
-                  Accessible
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.filterChip,
-                  filter === "normal" && styles.filterChipActive,
-                ]}
+                style={styles.filterButton}
+              />
+              <AppButton
+                title="Normal"
+                variant={filter === "normal" ? "primary" : "secondary"}
                 onPress={() => setFilter("normal")}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    filter === "normal" && styles.filterChipTextActive,
-                  ]}
-                >
-                  Normal
-                </Text>
-              </Pressable>
+                style={styles.filterButton}
+              />
             </View>
-          </View>
+          </AppCard>
 
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Wear on Travel Day</Text>
-            <Text style={styles.sectionSubtitle}>
-              Items you plan to wear during transit.
-            </Text>
+          <AppCard>
+            <SectionHeader
+              title="Wear on Travel Day"
+              subtitle="Items you plan to wear during transit."
+            />
 
             {groupedItems.wearOnTravelDay.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>
-                  No items are marked to wear on travel day.
-                </Text>
-              </View>
+              <EmptyState
+                title="No wear-today items"
+                description="No items are marked to wear on travel day."
+              />
             ) : (
               groupedItems.wearOnTravelDay.map(renderItemCard)
             )}
-          </View>
+          </AppCard>
 
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Keep Accessible</Text>
-            <Text style={styles.sectionSubtitle}>
-              Items you want close and easy to reach during travel.
-            </Text>
+          <AppCard>
+            <SectionHeader
+              title="Keep Accessible"
+              subtitle="Items you want easy to reach during travel."
+            />
 
             {groupedItems.keepAccessible.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>
-                  No items are marked as keep accessible.
-                </Text>
-              </View>
+              <EmptyState
+                title="No accessible items"
+                description="No items are marked as keep accessible."
+              />
             ) : (
               groupedItems.keepAccessible.map(renderItemCard)
             )}
-          </View>
+          </AppCard>
 
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Normal Packed Items</Text>
-            <Text style={styles.sectionSubtitle}>
-              Items that stay in your normal luggage plan.
-            </Text>
+          <AppCard>
+            <SectionHeader
+              title="Normal Packed Items"
+              subtitle="Items that stay in your normal luggage plan."
+            />
 
             {groupedItems.normal.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>
-                  No items are currently marked as normal.
-                </Text>
-              </View>
+              <EmptyState
+                title="No normal items"
+                description="No items are currently marked as normal."
+              />
             ) : (
               groupedItems.normal.map(renderItemCard)
             )}
-          </View>
+          </AppCard>
         </View>
       </ScrollView>
     </AppScreen>
@@ -433,6 +378,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: spacing.xl,
+    gap: spacing.lg,
   },
   centerBlock: {
     flex: 1,
@@ -449,47 +395,35 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     color: colors.secondary,
-    marginBottom: spacing.sm,
     textTransform: "uppercase",
   },
   title: {
     fontSize: 30,
     fontWeight: "800",
     color: colors.text,
-    marginBottom: spacing.xs,
+    marginTop: 4,
   },
   subtitle: {
     fontSize: 15,
     color: colors.textMuted,
-    marginBottom: spacing.xl,
+    marginTop: 4,
   },
-  summaryCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+  successCard: {
+    backgroundColor: "#f0fdf4",
+    borderColor: "#bbf7d0",
   },
-  sectionCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  sectionSubtitle: {
+  successText: {
+    color: "#166534",
     fontSize: 14,
-    color: colors.textMuted,
-    lineHeight: 20,
-    marginBottom: spacing.md,
+    fontWeight: "600",
+  },
+  errorCard: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: 14,
   },
   summaryGrid: {
     flexDirection: "row",
@@ -498,10 +432,11 @@ const styles = StyleSheet.create({
   },
   summaryMiniCard: {
     minWidth: "47%",
+    flex: 1,
     backgroundColor: "#f8fafc",
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: spacing.md,
   },
   summaryMiniLabel: {
@@ -511,84 +446,17 @@ const styles = StyleSheet.create({
   },
   summaryMiniValue: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.text,
-  },
-  filtersCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
   },
   filtersRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
   },
-  filterChip: {
-    borderRadius: 999,
-    paddingVertical: 8,
+  filterButton: {
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: "#e5e7eb",
-  },
-  filterChipActive: {
-    backgroundColor: "#dbeafe",
-  },
-  filterChipText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#374151",
-  },
-  filterChipTextActive: {
-    color: "#1d4ed8",
-  },
-  successCard: {
-    backgroundColor: "#f0fdf4",
-    borderWidth: 1,
-    borderColor: "#bbf7d0",
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  successText: {
-    color: "#166534",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  errorCard: {
-    backgroundColor: "#fef2f2",
-    borderWidth: 1,
-    borderColor: "#fecaca",
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 14,
-    textAlign: "center",
-  },
-  emptyCard: {
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    padding: spacing.lg,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: colors.textMuted,
-    lineHeight: 22,
-  },
-  itemCard: {
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
   },
   itemTopRow: {
     flexDirection: "row",
@@ -604,10 +472,15 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
     color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  metaRow: {
     marginBottom: 6,
+  },
+  itemSubText: {
+    fontSize: 13,
+    color: colors.textMuted,
+  },
+  metaGroup: {
+    gap: 8,
+    marginBottom: spacing.md,
   },
   metaText: {
     fontSize: 14,
@@ -617,59 +490,16 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: "700",
   },
-  modeBadge: {
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  modeBadgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  modeWearBadge: {
-    backgroundColor: "#dbeafe",
-  },
-  modeWearBadgeText: {
-    color: "#1d4ed8",
-  },
-  modeAccessibleBadge: {
-    backgroundColor: "#dcfce7",
-  },
-  modeAccessibleBadgeText: {
-    color: "#166534",
-  },
-  modeNormalBadge: {
-    backgroundColor: "#e5e7eb",
-  },
-  modeNormalBadgeText: {
-    color: "#374151",
-  },
-  actionsRow: {
+  actionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
-    marginTop: spacing.md,
   },
-  secondaryButton: {
-    backgroundColor: "#e2e8f0",
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+  actionButton: {
+    flex: 1,
+    minWidth: "47%",
   },
-  secondaryButtonText: {
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  normalButton: {
-    backgroundColor: "#ede9fe",
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  normalButtonText: {
-    color: "#6d28d9",
-    fontSize: 13,
-    fontWeight: "700",
+  fullWidthAction: {
+    width: "100%",
   },
 });
