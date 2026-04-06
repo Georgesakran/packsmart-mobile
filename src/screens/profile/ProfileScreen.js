@@ -1,10 +1,13 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import AppScreen from "../../components/common/AppScreen";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
+import useAuth from "../../hooks/useAuth";
 
 export default function ProfileScreen() {
+  const { logout } = useAuth();
+
   return (
     <AppScreen>
       <View style={styles.container}>
@@ -12,6 +15,10 @@ export default function ProfileScreen() {
         <Text style={styles.subtitle}>
           Your account and packing preferences will appear here
         </Text>
+
+        <Pressable style={styles.logoutButton} onPress={logout}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </Pressable>
       </View>
     </AppScreen>
   );
@@ -34,5 +41,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textMuted,
     textAlign: "center",
+    marginBottom: spacing.xl,
+  },
+  logoutButton: {
+    backgroundColor: colors.danger,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+  },
+  logoutButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });
