@@ -13,10 +13,12 @@ import AppScreen from "../../components/common/AppScreen";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { deleteTripBag, updateTripBag } from "../../api/tripApi";
+import { useNotifications } from "../../context/NotificationsContext";
+
 
 export default function EditTripBagScreen({ route, navigation }) {
   const { tripId, bag } = route.params || {};
-
+  const { refreshNotifications } = useNotifications();
   const [name, setName] = useState(bag?.name || "");
   const [bagRole, setBagRole] = useState(bag?.bag_role || bag?.bagRole || "main");
   const [volumeCm3, setVolumeCm3] = useState(
@@ -57,6 +59,7 @@ export default function EditTripBagScreen({ route, navigation }) {
         bagRole,
         isPrimary,
       });
+      await refreshNotifications();
 
       navigation.goBack();
     } catch (err) {
@@ -88,6 +91,7 @@ export default function EditTripBagScreen({ route, navigation }) {
       setError("");
 
       await deleteTripBag(tripId, bag.id);
+      await refreshNotifications();
 
       navigation.goBack();
     } catch (err) {

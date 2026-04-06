@@ -11,9 +11,11 @@ import AppScreen from "../../components/common/AppScreen";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { applyTemplateToTrip, getPackingTemplates } from "../../api/tripApi";
+import { useNotifications } from "../../context/NotificationsContext";
 
 export default function ApplyTemplateScreen({ route, navigation }) {
   const { tripId } = route.params || {};
+  const { refreshNotifications } = useNotifications();
 
   const [loading, setLoading] = useState(true);
   const [templates, setTemplates] = useState([]);
@@ -45,7 +47,8 @@ export default function ApplyTemplateScreen({ route, navigation }) {
       setError("");
 
       await applyTemplateToTrip(tripId, templateId, { replaceExistingItems });
-
+      await refreshNotifications();
+      
       navigation.goBack();
     } catch (err) {
       console.error("Apply template error:", err);

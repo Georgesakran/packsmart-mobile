@@ -12,6 +12,7 @@ import AppScreen from "../../components/common/AppScreen";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { createTripBag } from "../../api/tripApi";
+import { useNotifications } from "../../context/NotificationsContext";
 
 export default function AddTripBagScreen({ route, navigation }) {
   const { tripId } = route.params || {};
@@ -24,7 +25,7 @@ export default function AddTripBagScreen({ route, navigation }) {
   const [widthCm, setWidthCm] = useState("");
   const [heightCm, setHeightCm] = useState("");
   const [isPrimary, setIsPrimary] = useState(false);
-
+  const { refreshNotifications } = useNotifications();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -45,6 +46,7 @@ export default function AddTripBagScreen({ route, navigation }) {
         bagRole,
         isPrimary,
       });
+      await refreshNotifications();
 
       navigation.goBack();
     } catch (err) {

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 import AppScreen from "../../components/common/AppScreen";
 import AppCard from "../../components/common/AppCard";
@@ -7,38 +7,21 @@ import SectionHeader from "../../components/common/SectionHeader";
 import StatusBadge from "../../components/common/StatusBadge";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
-import { getTrips } from "../../api/tripApi";
-import { buildNotificationsFromTrips } from "../../utils/buildNotifications";
+import { useNotifications } from "../../context/NotificationsContext";
 
 export default function NotificationsScreen({ navigation }) {
-  const [loading, setLoading] = useState(true);
-  const [trips, setTrips] = useState([]);
-  const [error, setError] = useState("");
-
-  const loadNotifications = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const data = await getTrips();
-      setTrips(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Load notifications error:", err);
-      setError(err?.response?.data?.message || "Failed to load notifications.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    trips,
+    notifications,
+    loadingNotifications,
+    refreshNotifications,
+  } = useNotifications();
 
   useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+    refreshNotifications();
+  }, [refreshNotifications]);
 
-  const notifications = useMemo(() => {
-    return buildNotificationsFromTrips(trips);
-  }, [trips]);
-
-  if (loading) {
+  if (loadingNotifications) {
     return (
       <AppScreen>
         <View style={styles.centerBlock}>
@@ -58,12 +41,6 @@ export default function NotificationsScreen({ navigation }) {
           <Text style={styles.subtitle}>
             Smart reminders generated from your current trip states.
           </Text>
-
-          {error ? (
-            <AppCard style={styles.errorCard}>
-              <Text style={styles.errorText}>{error}</Text>
-            </AppCard>
-          ) : null}
 
           <AppCard>
             <SectionHeader
@@ -104,10 +81,7 @@ export default function NotificationsScreen({ navigation }) {
                   <View style={styles.notificationTopRow}>
                     <View style={styles.notificationTextWrap}>
                       <Text style={styles.notificationIndex}>
-                        Reminder #{index + 1}
-                      </Text>
-                      <Text style={styles.notificationIndex}>
-                        Priority {notification.priority}
+                        Priority {notification.priority} • Reminder #{index + 1}
                       </Text>
                       <Text style={styles.notificationTitle}>
                         {notification.title}
@@ -186,14 +160,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textMuted,
     marginTop: 4,
-  },
-  errorCard: {
-    backgroundColor: "#fef2f2",
-    borderColor: "#fecaca",
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 14,
   },
   overviewRow: {
     flexDirection: "row",

@@ -12,6 +12,7 @@ import AppScreen from "../../components/common/AppScreen";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { createTripItem, getTripSuitcases } from "../../api/tripApi";
+import { useNotifications } from "../../context/NotificationsContext";
 
 export default function AddTripItemScreen({ route, navigation }) {
   const { tripId } = route.params || {};
@@ -29,6 +30,8 @@ export default function AddTripItemScreen({ route, navigation }) {
   const [loadingBags, setLoadingBags] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const { refreshNotifications } = useNotifications();
 
   useEffect(() => {
     const loadBags = async () => {
@@ -61,6 +64,7 @@ export default function AddTripItemScreen({ route, navigation }) {
         baseWeightG: Number(baseWeightG),
         assignedBagId: assignedBagId ? Number(assignedBagId) : null,
       });
+      await refreshNotifications();
 
       navigation.goBack();
     } catch (err) {

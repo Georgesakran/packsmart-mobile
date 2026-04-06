@@ -12,6 +12,8 @@ import AppScreen from "../../components/common/AppScreen";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { createTrip } from "../../api/tripApi";
+import { useNotifications } from "../../context/NotificationsContext";
+
 
 export default function CreateTripScreen({ navigation }) {
   const [tripName, setTripName] = useState("");
@@ -20,6 +22,7 @@ export default function CreateTripScreen({ navigation }) {
   const [travelType, setTravelType] = useState("casual");
   const [weatherType, setWeatherType] = useState("mixed");
   const [travelerCount, setTravelerCount] = useState("1");
+  const { refreshNotifications } = useNotifications();
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -37,12 +40,13 @@ export default function CreateTripScreen({ navigation }) {
         weatherType,
         travelerCount: Number(travelerCount),
       });
+      await refreshNotifications();
+
 
       const createdTrip =
         data?.trip || data?.data || data;
 
       const tripId = createdTrip?.id;
-
       if (!tripId) {
         navigation.goBack();
         return;

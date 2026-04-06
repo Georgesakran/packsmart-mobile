@@ -13,10 +13,12 @@ import AppScreen from "../../components/common/AppScreen";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { deleteTripItem, getTripSuitcases, updateTripItem } from "../../api/tripApi";
+import { useNotifications } from "../../context/NotificationsContext";
+
 
 export default function EditTripItemScreen({ route, navigation }) {
   const { tripId, item } = route.params || {};
-
+  const { refreshNotifications } = useNotifications();
   const [customName, setCustomName] = useState(
     item?.custom_name || item?.customName || item?.base_item_name || item?.name || ""
   );
@@ -73,6 +75,7 @@ export default function EditTripItemScreen({ route, navigation }) {
         baseWeightG: Number(baseWeightG),
         assignedBagId: assignedBagId ? Number(assignedBagId) : null,
       });
+      await refreshNotifications();
 
       navigation.goBack();
     } catch (err) {
@@ -104,7 +107,8 @@ export default function EditTripItemScreen({ route, navigation }) {
       setError("");
 
       await deleteTripItem(tripId, item.id);
-
+      await refreshNotifications();
+      
       navigation.goBack();
     } catch (err) {
       console.error("Delete trip item error:", err);

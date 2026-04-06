@@ -1,34 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/home/HomeScreen";
 import TemplatesScreen from "../screens/templates/TemplatesScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
 import NotificationsScreen from "../screens/notifications/NotificationsScreen";
 import TripsStackNavigator from "./TripsStackNavigator";
-import { getTrips } from "../api/tripApi";
-import { buildNotificationsFromTrips } from "../utils/buildNotifications";
+import { useNotifications } from "../context/NotificationsContext";
 
 const Tab = createBottomTabNavigator();
 
 export default function AppTabsNavigator() {
-  const [trips, setTrips] = useState([]);
-
-  const loadTripsForNotifications = useCallback(async () => {
-    try {
-      const data = await getTrips();
-      setTrips(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Load trips for badge error:", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadTripsForNotifications();
-  }, [loadTripsForNotifications]);
-
-  const notificationCount = useMemo(() => {
-    return buildNotificationsFromTrips(trips).length;
-  }, [trips]);
+  const { notificationCount } = useNotifications();
 
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }}>

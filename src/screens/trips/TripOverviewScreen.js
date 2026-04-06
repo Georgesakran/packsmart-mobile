@@ -14,6 +14,7 @@ import StatusBadge from "../../components/common/StatusBadge";
 import SectionHeader from "../../components/common/SectionHeader";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
+import { useNotifications } from "../../context/NotificationsContext";
 import {
   getTripById,
   getTripItems,
@@ -25,6 +26,7 @@ import {
 
 export default function TripOverviewScreen({ route, navigation }) {
   const { tripId } = route.params || {};
+  const { refreshNotifications } = useNotifications();
 
   const [loading, setLoading] = useState(true);
   const [trip, setTrip] = useState(null);
@@ -36,6 +38,7 @@ export default function TripOverviewScreen({ route, navigation }) {
   const [actionError, setActionError] = useState("");
   const [generating, setGenerating] = useState(false);
   const [calculating, setCalculating] = useState(false);
+
 
   const loadTripOverview = useCallback(async () => {
     try {
@@ -82,7 +85,6 @@ export default function TripOverviewScreen({ route, navigation }) {
       setActionMessage("");
 
       const data = await generateTripSuggestions(tripId);
-
       const profileUsed = data?.profileUsed;
 
       const message = profileUsed
@@ -91,6 +93,7 @@ export default function TripOverviewScreen({ route, navigation }) {
 
       setActionMessage(message);
       await loadTripOverview();
+      await refreshNotifications();
     } catch (err) {
       console.error("Generate suggestions error:", err);
       setActionError(
@@ -111,6 +114,7 @@ export default function TripOverviewScreen({ route, navigation }) {
 
       setActionMessage(data?.message || "Trip calculated successfully.");
       await loadTripOverview();
+      await refreshNotifications();
     } catch (err) {
       console.error("Calculate trip error:", err);
       setActionError(

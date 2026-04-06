@@ -16,9 +16,12 @@ import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { getTripById, getTripItems } from "../../api/tripApi";
 import client from "../../api/client";
+import { useNotifications } from "../../context/NotificationsContext";
+
 
 export default function TripChecklistScreen({ route }) {
   const { tripId } = route.params || {};
+  const { refreshNotifications } = useNotifications();
 
   const [loading, setLoading] = useState(true);
   const [trip, setTrip] = useState(null);
@@ -83,6 +86,8 @@ export default function TripChecklistScreen({ route }) {
         `/trips/${tripId}/items/${itemId}/packing-status`,
         { packingStatus }
       );
+      await refreshNotifications();
+
 
       setActionMessage(
         response.data?.message || "Packing status updated successfully."

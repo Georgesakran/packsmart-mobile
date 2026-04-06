@@ -16,9 +16,12 @@ import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { getTripById, getTripItems } from "../../api/tripApi";
 import client from "../../api/client";
+import { useNotifications } from "../../context/NotificationsContext";
+
 
 export default function TripTravelDayScreen({ route }) {
   const { tripId } = route.params || {};
+  const { refreshNotifications } = useNotifications();
 
   const [loading, setLoading] = useState(true);
   const [trip, setTrip] = useState(null);
@@ -85,6 +88,8 @@ export default function TripTravelDayScreen({ route }) {
         `/trips/${tripId}/items/${itemId}/travel-day-mode`,
         { travelDayMode }
       );
+      await refreshNotifications();
+
 
       setActionMessage(
         response.data?.message || "Travel day mode updated successfully."
