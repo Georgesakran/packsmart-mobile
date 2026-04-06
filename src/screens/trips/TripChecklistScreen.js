@@ -1,13 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import AppScreen from "../../components/common/AppScreen";
+import AppCard from "../../components/common/AppCard";
+import AppButton from "../../components/common/AppButton";
+import StatusBadge from "../../components/common/StatusBadge";
+import SectionHeader from "../../components/common/SectionHeader";
+import EmptyState from "../../components/common/EmptyState";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { getTripById, getTripItems } from "../../api/tripApi";
@@ -118,6 +122,15 @@ export default function TripChecklistScreen({ route }) {
     return "Pending";
   };
 
+  const getPackingTone = (item) => {
+    const status = getPackingStatus(item);
+
+    if (status === "packed") return "success";
+    if (status === "wear_on_travel_day") return "info";
+    if (status === "skip") return "danger";
+    return "neutral";
+  };
+
   const filteredItems = useMemo(() => {
     if (filter === "all") return items;
 
@@ -144,16 +157,6 @@ export default function TripChecklistScreen({ route }) {
     );
   }
 
-  if (error && items.length === 0) {
-    return (
-      <AppScreen>
-        <View style={styles.centerBlock}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      </AppScreen>
-    );
-  }
-
   return (
     <AppScreen>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -164,8 +167,24 @@ export default function TripChecklistScreen({ route }) {
             Track what is packed, skipped, or set for travel day.
           </Text>
 
-          <View style={styles.progressCard}>
-            <Text style={styles.sectionTitle}>Checklist Progress</Text>
+          {actionMessage ? (
+            <AppCard style={styles.successCard}>
+              <Text style={styles.successText}>{actionMessage}</Text>
+            </AppCard>
+          ) : null}
+
+          {error ? (
+            <AppCard style={styles.errorCard}>
+              <Text style={styles.errorText}>{error}</Text>
+            </AppCard>
+          ) : null}
+
+          <AppCard>
+            <SectionHeader
+              title="Checklist Progress"
+              subtitle="A quick progress view of packing execution."
+            />
+
             <Text style={styles.progressPercent}>
               {summary.completionPercent || 0}% complete
             </Text>
@@ -179,236 +198,141 @@ export default function TripChecklistScreen({ route }) {
               />
             </View>
 
-            <View style={styles.miniStatsGrid}>
-              <View style={styles.miniStatCard}>
-                <Text style={styles.miniStatLabel}>Total</Text>
-                <Text style={styles.miniStatValue}>{summary.totalItems}</Text>
+            <View style={styles.summaryGrid}>
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Total</Text>
+                <Text style={styles.summaryMiniValue}>{summary.totalItems}</Text>
               </View>
-              <View style={styles.miniStatCard}>
-                <Text style={styles.miniStatLabel}>Pending</Text>
-                <Text style={styles.miniStatValue}>{summary.pending}</Text>
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Pending</Text>
+                <Text style={styles.summaryMiniValue}>{summary.pending}</Text>
               </View>
-              <View style={styles.miniStatCard}>
-                <Text style={styles.miniStatLabel}>Packed</Text>
-                <Text style={styles.miniStatValue}>{summary.packed}</Text>
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Packed</Text>
+                <Text style={styles.summaryMiniValue}>{summary.packed}</Text>
               </View>
-              <View style={styles.miniStatCard}>
-                <Text style={styles.miniStatLabel}>Travel Day</Text>
-                <Text style={styles.miniStatValue}>{summary.wearOnTravelDay}</Text>
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Travel Day</Text>
+                <Text style={styles.summaryMiniValue}>{summary.wearOnTravelDay}</Text>
               </View>
-              <View style={styles.miniStatCard}>
-                <Text style={styles.miniStatLabel}>Skipped</Text>
-                <Text style={styles.miniStatValue}>{summary.skip}</Text>
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Skipped</Text>
+                <Text style={styles.summaryMiniValue}>{summary.skip}</Text>
               </View>
             </View>
-          </View>
+          </AppCard>
 
-          {actionMessage ? (
-            <View style={styles.successCard}>
-              <Text style={styles.successText}>{actionMessage}</Text>
-            </View>
-          ) : null}
-
-          {error ? (
-            <View style={styles.errorCard}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
-
-          <View style={styles.filtersCard}>
-            <Text style={styles.sectionTitle}>Filters</Text>
+          <AppCard>
+            <SectionHeader
+              title="Filters"
+              subtitle="Focus on the items that matter right now."
+            />
 
             <View style={styles.filtersRow}>
-              <Pressable
-                style={[
-                  styles.filterChip,
-                  filter === "all" && styles.filterChipActive,
-                ]}
+              <AppButton
+                title="All"
+                variant={filter === "all" ? "primary" : "secondary"}
                 onPress={() => setFilter("all")}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    filter === "all" && styles.filterChipTextActive,
-                  ]}
-                >
-                  All
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.filterChip,
-                  filter === "pending" && styles.filterChipActive,
-                ]}
+                style={styles.filterButton}
+              />
+              <AppButton
+                title="Pending"
+                variant={filter === "pending" ? "primary" : "secondary"}
                 onPress={() => setFilter("pending")}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    filter === "pending" && styles.filterChipTextActive,
-                  ]}
-                >
-                  Pending
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.filterChip,
-                  filter === "packed" && styles.filterChipActive,
-                ]}
+                style={styles.filterButton}
+              />
+              <AppButton
+                title="Packed"
+                variant={filter === "packed" ? "primary" : "secondary"}
                 onPress={() => setFilter("packed")}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    filter === "packed" && styles.filterChipTextActive,
-                  ]}
-                >
-                  Packed
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.filterChip,
-                  filter === "travel_day" && styles.filterChipActive,
-                ]}
+                style={styles.filterButton}
+              />
+              <AppButton
+                title="Travel Day"
+                variant={filter === "travel_day" ? "primary" : "secondary"}
                 onPress={() => setFilter("travel_day")}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    filter === "travel_day" && styles.filterChipTextActive,
-                  ]}
-                >
-                  Travel Day
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.filterChip,
-                  filter === "skip" && styles.filterChipActive,
-                ]}
+                style={styles.filterButton}
+              />
+              <AppButton
+                title="Skipped"
+                variant={filter === "skip" ? "primary" : "secondary"}
                 onPress={() => setFilter("skip")}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    filter === "skip" && styles.filterChipTextActive,
-                  ]}
-                >
-                  Skipped
-                </Text>
-              </Pressable>
+                style={styles.filterButton}
+              />
             </View>
-          </View>
+          </AppCard>
 
           {filteredItems.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No checklist items found</Text>
-              <Text style={styles.emptyText}>
-                No items match the current filter.
-              </Text>
-            </View>
+            <EmptyState
+              title="No checklist items found"
+              description="No items match the current filter."
+            />
           ) : (
-            filteredItems.map((item) => {
-              const status = getPackingStatus(item);
-
-              return (
-                <View key={item.id} style={styles.itemCard}>
-                  <View style={styles.itemTopRow}>
+            filteredItems.map((item) => (
+              <AppCard key={item.id}>
+                <View style={styles.itemTopRow}>
+                  <View style={styles.itemTitleWrap}>
                     <Text style={styles.itemTitle}>
                       {getDisplayName(item)} × {item.quantity || 1}
                     </Text>
-
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        status === "packed"
-                          ? styles.statusPacked
-                          : status === "wear_on_travel_day"
-                          ? styles.statusTravelDay
-                          : status === "skip"
-                          ? styles.statusSkipped
-                          : styles.statusPending,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.statusBadgeText,
-                          status === "packed"
-                            ? styles.statusPackedText
-                            : status === "wear_on_travel_day"
-                            ? styles.statusTravelDayText
-                            : status === "skip"
-                            ? styles.statusSkippedText
-                            : styles.statusPendingText,
-                        ]}
-                      >
-                        {getPackingStatusLabel(item)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>
-                      <Text style={styles.metaLabel}>Priority: </Text>
-                      {item.priority || "recommended"}
+                    <Text style={styles.itemSubText}>
+                      Priority: {item.priority || "recommended"}
                     </Text>
                   </View>
 
-                  <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>
-                      <Text style={styles.metaLabel}>Assigned Bag: </Text>
-                      {item.assigned_bag_name && item.assigned_bag_role
-                        ? `${item.assigned_bag_name} (${item.assigned_bag_role})`
-                        : item.preferredBagRole
-                        ? `Auto / preferred: ${item.preferredBagRole}`
-                        : "Auto"}
-                    </Text>
-                  </View>
-
-                  <View style={styles.actionsRow}>
-                    <Pressable
-                      style={styles.secondaryButton}
-                      disabled={updatingItemId === item.id}
-                      onPress={() => updatePackingStatus(item.id, "packed")}
-                    >
-                      <Text style={styles.secondaryButtonText}>Pack</Text>
-                    </Pressable>
-
-                    <Pressable
-                      style={styles.secondaryButton}
-                      disabled={updatingItemId === item.id}
-                      onPress={() =>
-                        updatePackingStatus(item.id, "wear_on_travel_day")
-                      }
-                    >
-                      <Text style={styles.secondaryButtonText}>Travel Day</Text>
-                    </Pressable>
-
-                    <Pressable
-                      style={styles.skipButton}
-                      disabled={updatingItemId === item.id}
-                      onPress={() => updatePackingStatus(item.id, "skip")}
-                    >
-                      <Text style={styles.skipButtonText}>Skip</Text>
-                    </Pressable>
-
-                    <Pressable
-                      style={styles.secondaryButton}
-                      disabled={updatingItemId === item.id}
-                      onPress={() => updatePackingStatus(item.id, "pending")}
-                    >
-                      <Text style={styles.secondaryButtonText}>Reset</Text>
-                    </Pressable>
-                  </View>
+                  <StatusBadge
+                    label={getPackingStatusLabel(item)}
+                    tone={getPackingTone(item)}
+                  />
                 </View>
-              );
-            })
+
+                <Text style={styles.metaText}>
+                  <Text style={styles.metaLabel}>Assigned Bag: </Text>
+                  {item.assigned_bag_name && item.assigned_bag_role
+                    ? `${item.assigned_bag_name} (${item.assigned_bag_role})`
+                    : item.preferredBagRole
+                    ? `Auto / preferred: ${item.preferredBagRole}`
+                    : "Auto"}
+                </Text>
+
+                <View style={styles.actionsGrid}>
+                  <AppButton
+                    title="Pack"
+                    variant="secondary"
+                    loading={updatingItemId === item.id}
+                    disabled={updatingItemId === item.id}
+                    onPress={() => updatePackingStatus(item.id, "packed")}
+                    style={styles.actionButton}
+                  />
+                  <AppButton
+                    title="Travel Day"
+                    variant="secondary"
+                    loading={false}
+                    disabled={updatingItemId === item.id}
+                    onPress={() =>
+                      updatePackingStatus(item.id, "wear_on_travel_day")
+                    }
+                    style={styles.actionButton}
+                  />
+                  <AppButton
+                    title="Skip"
+                    variant="danger"
+                    loading={false}
+                    disabled={updatingItemId === item.id}
+                    onPress={() => updatePackingStatus(item.id, "skip")}
+                    style={styles.actionButton}
+                  />
+                  <AppButton
+                    title="Reset"
+                    variant="secondary"
+                    loading={false}
+                    disabled={updatingItemId === item.id}
+                    onPress={() => updatePackingStatus(item.id, "pending")}
+                    style={styles.actionButton}
+                  />
+                </View>
+              </AppCard>
+            ))
           )}
         </View>
       </ScrollView>
@@ -423,6 +347,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: spacing.xl,
+    gap: spacing.lg,
   },
   centerBlock: {
     flex: 1,
@@ -439,33 +364,35 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     color: colors.secondary,
-    marginBottom: spacing.sm,
     textTransform: "uppercase",
   },
   title: {
     fontSize: 30,
     fontWeight: "800",
     color: colors.text,
-    marginBottom: spacing.xs,
+    marginTop: 4,
   },
   subtitle: {
     fontSize: 15,
     color: colors.textMuted,
-    marginBottom: spacing.xl,
+    marginTop: 4,
   },
-  progressCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+  successCard: {
+    backgroundColor: "#f0fdf4",
+    borderColor: "#bbf7d0",
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.sm,
+  successText: {
+    color: "#166534",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  errorCard: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: 14,
   },
   progressPercent: {
     fontSize: 24,
@@ -486,110 +413,37 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: 999,
   },
-  miniStatsGrid: {
+  summaryGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
   },
-  miniStatCard: {
+  summaryMiniCard: {
     minWidth: "30%",
     backgroundColor: "#f8fafc",
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: spacing.md,
   },
-  miniStatLabel: {
+  summaryMiniLabel: {
     fontSize: 12,
     color: colors.textMuted,
     marginBottom: 4,
   },
-  miniStatValue: {
+  summaryMiniValue: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.text,
-  },
-  filtersCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
   },
   filtersRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
   },
-  filterChip: {
-    borderRadius: 999,
-    paddingVertical: 8,
+  filterButton: {
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: "#e5e7eb",
-  },
-  filterChipActive: {
-    backgroundColor: "#dbeafe",
-  },
-  filterChipText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#374151",
-  },
-  filterChipTextActive: {
-    color: "#1d4ed8",
-  },
-  successCard: {
-    backgroundColor: "#f0fdf4",
-    borderWidth: 1,
-    borderColor: "#bbf7d0",
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  successText: {
-    color: "#166534",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  errorCard: {
-    backgroundColor: "#fef2f2",
-    borderWidth: 1,
-    borderColor: "#fecaca",
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 14,
-    textAlign: "center",
-  },
-  emptyCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  emptyText: {
-    fontSize: 15,
-    color: colors.textMuted,
-    lineHeight: 22,
-  },
-  itemCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
   },
   itemTopRow: {
     flexDirection: "row",
@@ -598,82 +452,34 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginBottom: spacing.md,
   },
-  itemTitle: {
+  itemTitleWrap: {
     flex: 1,
+  },
+  itemTitle: {
     fontSize: 17,
     fontWeight: "700",
     color: colors.text,
+    marginBottom: 6,
   },
-  statusBadge: {
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  statusPending: {
-    backgroundColor: "#e5e7eb",
-  },
-  statusPendingText: {
-    color: "#374151",
-  },
-  statusPacked: {
-    backgroundColor: "#dcfce7",
-  },
-  statusPackedText: {
-    color: "#166534",
-  },
-  statusTravelDay: {
-    backgroundColor: "#dbeafe",
-  },
-  statusTravelDayText: {
-    color: "#1d4ed8",
-  },
-  statusSkipped: {
-    backgroundColor: "#fee2e2",
-  },
-  statusSkippedText: {
-    color: "#b91c1c",
-  },
-  metaRow: {
-    marginBottom: 8,
+  itemSubText: {
+    fontSize: 13,
+    color: colors.textMuted,
   },
   metaText: {
     fontSize: 14,
     color: colors.textMuted,
+    marginBottom: spacing.md,
   },
   metaLabel: {
     color: colors.text,
     fontWeight: "700",
   },
-  actionsRow: {
+  actionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
-    marginTop: spacing.md,
   },
-  secondaryButton: {
-    backgroundColor: "#e2e8f0",
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  secondaryButtonText: {
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  skipButton: {
-    backgroundColor: "#fee2e2",
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  skipButtonText: {
-    color: "#b91c1c",
-    fontSize: 13,
-    fontWeight: "700",
+  actionButton: {
+    minWidth: "47%",
   },
 });
