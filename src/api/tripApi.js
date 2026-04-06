@@ -74,3 +74,8 @@ export const generateTripSuggestions = async (tripId) => {
   const response = await client.post(`/trips/${tripId}/generate-suggestions`, {});
   return response.data;
 };
+
+export const calculateTrip = async (tripId) => {
+  const response = await client.post(`/trips/${tripId}/calculate`, {});
+  return response.data;
+};

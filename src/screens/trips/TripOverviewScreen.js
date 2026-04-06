@@ -9,6 +9,7 @@ import {
   getTripResults,
   getTripSuitcases,
   generateTripSuggestions,
+  calculateTrip,
 } from "../../api/tripApi";
 
 export default function TripOverviewScreen({ route, navigation }) {
@@ -20,10 +21,11 @@ export default function TripOverviewScreen({ route, navigation }) {
   const [items, setItems] = useState([]);
   const [results, setResults] = useState(null);
   const [error, setError] = useState("");
-
   const [actionMessage, setActionMessage] = useState("");
   const [actionError, setActionError] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [calculating, setCalculating] = useState(false);
+
 
   const loadTripOverview = useCallback(async () => {
     try {
@@ -87,6 +89,27 @@ export default function TripOverviewScreen({ route, navigation }) {
       );
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleCalculateTrip = async () => {
+    try {
+      setCalculating(true);
+      setActionError("");
+      setActionMessage("");
+  
+      const data = await calculateTrip(tripId);
+  
+      setActionMessage(data?.message || "Trip calculated successfully.");
+  
+      await loadTripOverview();
+    } catch (err) {
+      console.error("Calculate trip error:", err);
+      setActionError(
+        err?.response?.data?.message || "Failed to calculate trip."
+      );
+    } finally {
+      setCalculating(false);
     }
   };
 
@@ -235,6 +258,19 @@ export default function TripOverviewScreen({ route, navigation }) {
               </Text>
               <Text style={styles.actionSubtitle}>
                 Create smart trip items based on trip details and saved preferences
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.actionCard}
+              onPress={handleCalculateTrip}
+              disabled={calculating}
+            >
+              <Text style={styles.actionTitle}>
+                {calculating ? "Calculating..." : "Calculate Trip"}
+              </Text>
+              <Text style={styles.actionSubtitle}>
+                Run packing calculation and update smart results for this trip
               </Text>
             </Pressable>
 
