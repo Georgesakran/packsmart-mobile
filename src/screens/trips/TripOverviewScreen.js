@@ -8,6 +8,7 @@ import {
   getTripItems,
   getTripResults,
   getTripSuitcases,
+  generateTripSuggestions,
 } from "../../api/tripApi";
 
 export default function TripOverviewScreen({ route, navigation }) {
@@ -19,6 +20,10 @@ export default function TripOverviewScreen({ route, navigation }) {
   const [items, setItems] = useState([]);
   const [results, setResults] = useState(null);
   const [error, setError] = useState("");
+
+  const [actionMessage, setActionMessage] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [generating, setGenerating] = useState(false);
 
   const loadTripOverview = useCallback(async () => {
     try {
@@ -57,6 +62,33 @@ export default function TripOverviewScreen({ route, navigation }) {
   useEffect(() => {
     loadTripOverview();
   }, [loadTripOverview]);
+
+  const handleGenerateSuggestions = async () => {
+    try {
+      setGenerating(true);
+      setActionError("");
+      setActionMessage("");
+  
+      const data = await generateTripSuggestions(tripId);
+  
+      const profileUsed = data?.profileUsed;
+  
+      const message = profileUsed
+        ? `Suggestions generated using size ${profileUsed.defaultSize}, travel style ${profileUsed.travelStyle}, and packing mode ${profileUsed.packingMode}.`
+        : data?.message || "Suggestions generated successfully.";
+  
+      setActionMessage(message);
+  
+      await loadTripOverview();
+    } catch (err) {
+      console.error("Generate suggestions error:", err);
+      setActionError(
+        err?.response?.data?.message || "Failed to generate suggestions."
+      );
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const resultStatus = useMemo(() => {
     if (!results?.totals) return "Not calculated";
@@ -100,6 +132,17 @@ export default function TripOverviewScreen({ route, navigation }) {
             This is the mobile control hub for your trip.
           </Text>
         </View>
+        {actionMessage ? (
+          <View style={styles.successCard}>
+            <Text style={styles.successText}>{actionMessage}</Text>
+          </View>
+        ) : null}
+
+        {actionError ? (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorText}>{actionError}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
@@ -180,6 +223,19 @@ export default function TripOverviewScreen({ route, navigation }) {
             >
               <Text style={styles.actionTitle}>Travel Day</Text>
               <Text style={styles.actionSubtitle}>Plan what to wear and keep close</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.actionCard}
+              onPress={handleGenerateSuggestions}
+              disabled={generating}
+            >
+              <Text style={styles.actionTitle}>
+                {generating ? "Generating..." : "Generate Suggestions"}
+              </Text>
+              <Text style={styles.actionSubtitle}>
+                Create smart trip items based on trip details and saved preferences
+              </Text>
             </Pressable>
 
             <Pressable
@@ -301,5 +357,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
     lineHeight: 20,
+  },
+  successCard: {
+    backgroundColor: "#f0fdf4",
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+    borderRadius: 16,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  successText: {
+    color: "#166534",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  errorCard: {
+    backgroundColor: "#fef2f2",
+    borderWidth: 1,
+    borderColor: "#fecaca",
+    borderRadius: 16,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
   },
 });

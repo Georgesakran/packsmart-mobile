@@ -67,6 +67,10 @@ export const createTrip = async ({
     weatherType,
     travelerCount,
   });
+  return response.data;
+};
 
+export const generateTripSuggestions = async (tripId) => {
+  const response = await client.post(`/trips/${tripId}/generate-suggestions`, {});
   return response.data;
 };
