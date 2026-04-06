@@ -190,6 +190,19 @@ export default function TripItemsScreen({ route }) {
                   {item.removePriority || "medium"}
                 </Text>
               </View>
+
+              <Pressable
+                style={styles.editButton}
+                onPress={() =>
+                  navigation.navigate("EditTripItem", {
+                    tripId,
+                    item,
+                  })
+                }
+              >
+                <Text style={styles.editButtonText}>Edit Item</Text>
+              </Pressable>
+
             </View>
           ))
         )}
@@ -356,6 +369,18 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   secondaryTopButtonText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  editButton: {
+    marginTop: spacing.md,
+    backgroundColor: "#e2e8f0",
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  editButtonText: {
     color: colors.text,
     fontSize: 14,
     fontWeight: "700",

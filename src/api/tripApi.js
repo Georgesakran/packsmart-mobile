@@ -193,3 +193,37 @@ export const deleteTripBag = async (tripId, bagId) => {
   const response = await client.delete(`/trips/${tripId}/suitcases/${bagId}`);
   return response.data;
 };
+
+export const updateTripItem = async (
+  tripId,
+  itemId,
+  {
+    customName,
+    quantity,
+    category,
+    sizeCode,
+    packBehavior,
+    baseVolumeCm3,
+    baseWeightG,
+    assignedBagId,
+  }
+) => {
+  const response = await client.put(`/trips/${tripId}/items/${itemId}`, {
+    sourceType: "custom",
+    customName,
+    quantity,
+    category,
+    sizeCode,
+    packBehavior,
+    baseVolumeCm3,
+    baseWeightG,
+    assignedBagId,
+  });
+
+  return response.data;
+};
+
+export const deleteTripItem = async (tripId, itemId) => {
+  const response = await client.delete(`/trips/${tripId}/items/${itemId}`);
+  return response.data;
+};

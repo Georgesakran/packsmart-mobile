@@ -12,6 +12,7 @@ import AddTripBagScreen from "../screens/trips/AddTripBagScreen";
 import AddTripItemScreen from "../screens/trips/AddTripItemScreen";
 import ApplyTemplateScreen from "../screens/trips/ApplyTemplateScreen";
 import EditTripBagScreen from "../screens/trips/EditTripBagScreen";
+import EditTripItemScreen from "../screens/trips/EditTripItemScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -80,6 +81,11 @@ export default function TripsStackNavigator() {
         name="EditTripBag"
         component={EditTripBagScreen}
         options={{ title: "Edit Bag" }}
+      />
+      <Stack.Screen
+        name="EditTripItem"
+        component={EditTripItemScreen}
+        options={{ title: "Edit Item" }}
       />
 
     </Stack.Navigator>
