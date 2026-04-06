@@ -79,3 +79,34 @@ export const calculateTrip = async (tripId) => {
   const response = await client.post(`/trips/${tripId}/calculate`, {});
   return response.data;
 };
+
+export const createTripBag = async (
+  tripId,
+  {
+    suitcaseType,
+    name,
+    volumeCm3,
+    maxWeightKg,
+    lengthCm,
+    widthCm,
+    heightCm,
+    isCustom,
+    bagRole,
+    isPrimary,
+  }
+) => {
+  const response = await client.post(`/trips/${tripId}/suitcases`, {
+    suitcaseType,
+    name,
+    volumeCm3,
+    maxWeightKg,
+    lengthCm,
+    widthCm,
+    heightCm,
+    isCustom,
+    bagRole,
+    isPrimary,
+  });
+
+  return response.data;
+};

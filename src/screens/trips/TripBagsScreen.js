@@ -5,7 +5,7 @@ import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { getTripById, getTripSuitcases } from "../../api/tripApi";
 
-export default function TripBagsScreen({ route }) {
+export default function TripBagsScreen({ route, navigation }) {
   const { tripId } = route.params || {};
 
   const [loading, setLoading] = useState(true);
@@ -34,8 +34,12 @@ export default function TripBagsScreen({ route }) {
   }, [tripId]);
 
   useEffect(() => {
-    loadBags();
-  }, [loadBags]);
+    const unsubscribe = navigation.addListener("focus", () => {
+      loadBags();
+    });
+  
+    return unsubscribe;
+  }, [navigation, loadBags]);
 
   if (loading) {
     return (
@@ -66,6 +70,16 @@ export default function TripBagsScreen({ route }) {
         <Text style={styles.subtitle}>
           Review all bags linked to this trip.
         </Text>
+        <Pressable
+          style={styles.addButton}
+          onPress={() =>
+            navigation.navigate("AddTripBag", {
+              tripId,
+            })
+          }
+        >
+          <Text style={styles.addButtonText}>+ Add Bag</Text>
+        </Pressable>
 
         <View style={styles.summaryCard}>
           <Text style={styles.summaryLabel}>Total Bags</Text>
@@ -267,6 +281,19 @@ const styles = StyleSheet.create({
   },
   metaLabel: {
     color: colors.text,
+    fontWeight: "700",
+  },
+  addButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignSelf: "flex-start",
+    marginBottom: spacing.lg,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 14,
     fontWeight: "700",
   },
 });
