@@ -37,3 +37,16 @@ export const updateTripItemPackingStatus = async (tripId, itemId, packingStatus)
   );
   return response.data;
 };
+
+export const getTripTravelDaySummary = async (tripId) => {
+  const response = await client.get(`/trips/${tripId}/travel-day-summary`);
+  return response.data;
+};
+
+export const updateTripItemTravelDayMode = async (tripId, itemId, travelDayMode) => {
+  const response = await client.put(
+    `/trips/${tripId}/items/${itemId}/travel-day-mode`,
+    { travelDayMode }
+  );
+  return response.data;
+};

@@ -170,15 +170,29 @@ export default function TripOverviewScreen({ route, navigation }) {
               <Text style={styles.actionSubtitle}>Track packing progress</Text>
             </Pressable>
 
-          <Pressable style={styles.actionCard}>
-            <Text style={styles.actionTitle}>Travel Day</Text>
-            <Text style={styles.actionSubtitle}>Plan what to wear and keep close</Text>
-          </Pressable>
+            <Pressable
+              style={styles.actionCard}
+              onPress={() =>
+                navigation.navigate("TripTravelDay", {
+                  tripId,
+                })
+              }
+            >
+              <Text style={styles.actionTitle}>Travel Day</Text>
+              <Text style={styles.actionSubtitle}>Plan what to wear and keep close</Text>
+            </Pressable>
 
-          <Pressable style={styles.actionCard}>
-            <Text style={styles.actionTitle}>Results</Text>
-            <Text style={styles.actionSubtitle}>See packing fit and smart actions</Text>
-          </Pressable>
+            <Pressable
+              style={styles.actionCard}
+              onPress={() =>
+                navigation.navigate("TripResults", {
+                  tripId,
+                })
+              }
+            >
+              <Text style={styles.actionTitle}>Results</Text>
+              <Text style={styles.actionSubtitle}>See packing fit and smart actions</Text>
+            </Pressable>
         </View>
       </View>
     </AppScreen>
