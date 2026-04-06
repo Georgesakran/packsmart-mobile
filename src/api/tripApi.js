@@ -50,3 +50,23 @@ export const updateTripItemTravelDayMode = async (tripId, itemId, travelDayMode)
   );
   return response.data;
 };
+
+export const createTrip = async ({
+  tripName,
+  destination,
+  durationDays,
+  travelType,
+  weatherType,
+  travelerCount,
+}) => {
+  const response = await client.post("/trips", {
+    tripName,
+    destination,
+    durationDays,
+    travelType,
+    weatherType,
+    travelerCount,
+  });
+
+  return response.data;
+};

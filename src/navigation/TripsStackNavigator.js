@@ -7,6 +7,7 @@ import TripItemsScreen from "../screens/trips/TripItemsScreen";
 import TripChecklistScreen from "../screens/trips/TripChecklistScreen";
 import TripTravelDayScreen from "../screens/trips/TripTravelDayScreen";
 import TripResultsScreen from "../screens/trips/TripResultsScreen";
+import CreateTripScreen from "../screens/trips/CreateTripScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -17,6 +18,11 @@ export default function TripsStackNavigator() {
         name="TripsList"
         component={TripsListScreen}
         options={{ title: "Trips" }}
+      />
+      <Stack.Screen
+        name="CreateTrip"
+        component={CreateTripScreen}
+        options={{ title: "Create Trip" }}
       />
       <Stack.Screen
         name="TripOverview"
@@ -41,14 +47,13 @@ export default function TripsStackNavigator() {
       <Stack.Screen
         name="TripTravelDay"
         component={TripTravelDayScreen}
-        options={{ title: "Trip Travel Day" }}
+        options={{ title: "Travel Day" }}
       />
       <Stack.Screen
         name="TripResults"
         component={TripResultsScreen}
         options={{ title: "Trip Results" }}
       />
-
     </Stack.Navigator>
   );
 }

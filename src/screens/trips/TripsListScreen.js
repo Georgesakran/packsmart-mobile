@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import AppScreen from "../../components/common/AppScreen";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
@@ -19,13 +25,19 @@ export default function TripsListScreen({ navigation }) {
       setTrips(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Load trips error:", err);
-      setError(
-        err?.response?.data?.message || "Failed to load trips."
-      );
+      setError(err?.response?.data?.message || "Failed to load trips.");
     } finally {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      loadTrips();
+    });
+
+    return unsubscribe;
+  }, [navigation, loadTrips]);
 
   useEffect(() => {
     loadTrips();
@@ -34,10 +46,21 @@ export default function TripsListScreen({ navigation }) {
   return (
     <AppScreen>
       <View style={styles.container}>
-        <Text style={styles.title}>Trips</Text>
-        <Text style={styles.subtitle}>
-          Your real trips from the PackSmart backend
-        </Text>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.title}>Trips</Text>
+            <Text style={styles.subtitle}>
+              Your real trips from the PackSmart backend
+            </Text>
+          </View>
+
+          <Pressable
+            style={styles.createButton}
+            onPress={() => navigation.navigate("CreateTrip")}
+          >
+            <Text style={styles.createButtonText}>+ New</Text>
+          </Pressable>
+        </View>
 
         {loading ? (
           <View style={styles.centerBlock}>
@@ -63,7 +86,6 @@ export default function TripsListScreen({ navigation }) {
               onPress={() =>
                 navigation.navigate("TripOverview", {
                   tripId: trip.id,
-                  tripName: trip.trip_name || "Unnamed Trip",
                 })
               }
             >
@@ -72,7 +94,9 @@ export default function TripsListScreen({ navigation }) {
               </Text>
               <Text style={styles.tripCardSubtitle}>
                 {trip.destination || "No destination"} •{" "}
-                {trip.duration_days ? `${trip.duration_days} days` : "No duration"}
+                {trip.duration_days
+                  ? `${trip.duration_days} days`
+                  : "No duration"}
               </Text>
             </Pressable>
           ))
@@ -87,6 +111,13 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: spacing.xl,
   },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: spacing.xl,
+    gap: spacing.md,
+  },
   title: {
     fontSize: 28,
     fontWeight: "800",
@@ -96,7 +127,17 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: colors.textMuted,
-    marginBottom: spacing.xl,
+  },
+  createButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  createButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
   },
   centerBlock: {
     marginTop: spacing.xl,
