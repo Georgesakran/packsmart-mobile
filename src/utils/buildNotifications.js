@@ -1,5 +1,24 @@
 export function buildNotificationsFromTrips(trips = []) {
   const notifications = [];
+  const now = new Date();
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const getDaysUntilTrip = (startDateValue) => {
+    if (!startDateValue) return null;
+
+    const tripDate = new Date(startDateValue);
+    if (Number.isNaN(tripDate.getTime())) return null;
+
+    const tripDay = new Date(
+      tripDate.getFullYear(),
+      tripDate.getMonth(),
+      tripDate.getDate()
+    );
+
+    const diffMs = tripDay.getTime() - startOfToday.getTime();
+    return Math.round(diffMs / (1000 * 60 * 60 * 24));
+  };
 
   trips.forEach((trip) => {
     const tripId = trip.id;
@@ -16,6 +35,8 @@ export function buildNotificationsFromTrips(trips = []) {
 
     const travelDayConfigured =
       trip.travelDayConfigured === true || trip.travel_day_configured === true;
+
+    const daysUntilTrip = getDaysUntilTrip(trip.start_date || trip.startDate);
 
     if (bagsCount === 0) {
       notifications.push({
@@ -99,6 +120,57 @@ export function buildNotificationsFromTrips(trips = []) {
         message: `${tripName} is in a strong state for travel.`,
         priority: 20,
       });
+    }
+
+    // Time-aware reminders (v1)
+    if (daysUntilTrip !== null && daysUntilTrip >= 0) {
+      if (daysUntilTrip >= 7) {
+        notifications.push({
+          id: `trip-${tripId}-schedule-plan`,
+          tripId,
+          type: "schedule",
+          tone: "info",
+          title: "Start planning early",
+          message: `${tripName} is coming up in ${daysUntilTrip} days. This is a good time to build or review the trip setup.`,
+          priority: 40,
+        });
+      }
+
+      if (daysUntilTrip >= 2 && daysUntilTrip <= 6) {
+        notifications.push({
+          id: `trip-${tripId}-schedule-pack`,
+          tripId,
+          type: "schedule",
+          tone: "warning",
+          title: "Packing window is open",
+          message: `${tripName} is in ${daysUntilTrip} days. Finalize bags, items, and calculation soon.`,
+          priority: 75,
+        });
+      }
+
+      if (daysUntilTrip === 1) {
+        notifications.push({
+          id: `trip-${tripId}-schedule-tonight`,
+          tripId,
+          type: "urgent",
+          tone: "danger",
+          title: "Final review tonight",
+          message: `${tripName} is tomorrow. Finish your checklist and review travel-day items tonight.`,
+          priority: 98,
+        });
+      }
+
+      if (daysUntilTrip === 0) {
+        notifications.push({
+          id: `trip-${tripId}-schedule-today`,
+          tripId,
+          type: "urgent",
+          tone: "danger",
+          title: "Travel day is today",
+          message: `${tripName} starts today. Open your travel-day plan and keep essentials accessible.`,
+          priority: 110,
+        });
+      }
     }
   });
 

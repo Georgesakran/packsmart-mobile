@@ -106,6 +106,9 @@ export default function NotificationsScreen({ navigation }) {
                       <Text style={styles.notificationIndex}>
                         Reminder #{index + 1}
                       </Text>
+                      <Text style={styles.notificationIndex}>
+                        Priority {notification.priority}
+                      </Text>
                       <Text style={styles.notificationTitle}>
                         {notification.title}
                       </Text>
@@ -115,7 +118,25 @@ export default function NotificationsScreen({ navigation }) {
                     </View>
 
                     <StatusBadge
-                      label={notification.type}
+                      label={
+                        notification.type === "setup"
+                          ? "Setup"
+                          : notification.type === "action"
+                          ? "Action"
+                          : notification.type === "warning"
+                          ? "Warning"
+                          : notification.type === "progress"
+                          ? "Progress"
+                          : notification.type === "travel-day"
+                          ? "Travel Day"
+                          : notification.type === "ready"
+                          ? "Ready"
+                          : notification.type === "schedule"
+                          ? "Schedule"
+                          : notification.type === "urgent"
+                          ? "Urgent"
+                          : notification.type
+                      }
                       tone={notification.tone}
                     />
                   </View>
