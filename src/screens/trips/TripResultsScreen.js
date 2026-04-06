@@ -7,6 +7,10 @@ import {
   View,
 } from "react-native";
 import AppScreen from "../../components/common/AppScreen";
+import AppCard from "../../components/common/AppCard";
+import StatusBadge from "../../components/common/StatusBadge";
+import SectionHeader from "../../components/common/SectionHeader";
+import EmptyState from "../../components/common/EmptyState";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { getTripById, getTripResults } from "../../api/tripApi";
@@ -48,9 +52,21 @@ export default function TripResultsScreen({ route }) {
     return results.totals.overallFits ? "Fits" : "Needs changes";
   }, [results]);
 
+  const overallTone = useMemo(() => {
+    if (overallStatus === "Fits") return "success";
+    if (overallStatus === "Needs changes") return "danger";
+    return "neutral";
+  }, [overallStatus]);
+
   const mainConstraint = useMemo(() => {
     return results?.smartAdjustments?.mainConstraint || "none";
   }, [results]);
+
+  const constraintLabel = useMemo(() => {
+    if (mainConstraint === "none") return "No major issue";
+    if (mainConstraint === "both") return "Volume + Weight";
+    return mainConstraint;
+  }, [mainConstraint]);
 
   const topAction = useMemo(() => {
     const rebalance = results?.bagRebalancingSuggestions?.[0];
@@ -95,8 +111,10 @@ export default function TripResultsScreen({ route }) {
   if (error) {
     return (
       <AppScreen>
-        <View style={styles.centerBlock}>
-          <Text style={styles.errorText}>{error}</Text>
+        <View style={styles.container}>
+          <AppCard style={styles.errorCard}>
+            <Text style={styles.errorText}>{error}</Text>
+          </AppCard>
         </View>
       </AppScreen>
     );
@@ -105,8 +123,11 @@ export default function TripResultsScreen({ route }) {
   if (!results?.totals) {
     return (
       <AppScreen>
-        <View style={styles.centerBlock}>
-          <Text style={styles.errorText}>No saved results found for this trip.</Text>
+        <View style={styles.container}>
+          <EmptyState
+            title="No saved results found"
+            description="Calculate this trip first to see fit status and smart actions."
+          />
         </View>
       </AppScreen>
     );
@@ -122,133 +143,151 @@ export default function TripResultsScreen({ route }) {
             Review fit status, smart actions, and bag distribution.
           </Text>
 
-          <View style={styles.heroCard}>
-            <Text style={styles.heroLabel}>Overall Status</Text>
-            <Text
-              style={[
-                styles.heroValue,
-                overallStatus === "Fits" ? styles.goodText : styles.dangerText,
-              ]}
-            >
-              {overallStatus}
-            </Text>
+          <AppCard style={styles.heroCard}>
+            <View style={styles.heroTopRow}>
+              <View style={styles.heroTextBlock}>
+                <Text style={styles.heroLabel}>Overall Status</Text>
+                <Text style={styles.heroValue}>{overallStatus}</Text>
+              </View>
+
+              <StatusBadge label={overallStatus} tone={overallTone} />
+            </View>
+
             <Text style={styles.heroSubtext}>
               {results.totals.overallFits
                 ? "This packing setup should fit within your trip bags."
                 : "This setup needs adjustment before travel."}
             </Text>
-          </View>
+          </AppCard>
 
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Used Capacity</Text>
-              <Text style={styles.statValue}>
-                {results.totals.usedCapacityPercent ?? 0}%
-              </Text>
+          <AppCard>
+            <SectionHeader
+              title="Top Decision"
+              subtitle="The most important thing to understand right now."
+            />
+
+            <View style={styles.topDecisionWrap}>
+              <View style={styles.topDecisionCard}>
+                <Text style={styles.topDecisionLabel}>Main Constraint</Text>
+                <Text style={styles.topDecisionValue}>{constraintLabel}</Text>
+              </View>
+
+              <View style={styles.topDecisionCard}>
+                <Text style={styles.topDecisionLabel}>Top Action</Text>
+                <Text style={styles.topDecisionAction}>{topAction}</Text>
+              </View>
             </View>
+          </AppCard>
 
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Total Weight</Text>
-              <Text style={styles.statValue}>
-                {results.totals.weightKg ?? 0} kg
-              </Text>
+          <AppCard>
+            <SectionHeader
+              title="Trip Totals"
+              subtitle="Core packing totals for this result."
+            />
+
+            <View style={styles.summaryGrid}>
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Used Capacity</Text>
+                <Text style={styles.summaryMiniValue}>
+                  {results.totals.usedCapacityPercent ?? 0}%
+                </Text>
+              </View>
+
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Total Weight</Text>
+                <Text style={styles.summaryMiniValue}>
+                  {results.totals.weightKg ?? 0} kg
+                </Text>
+              </View>
+
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Total Volume</Text>
+                <Text style={styles.summaryMiniValue}>
+                  {results.totals.totalVolumeCm3 ?? 0} cm³
+                </Text>
+              </View>
+
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Remaining Volume</Text>
+                <Text style={styles.summaryMiniValue}>
+                  {results.totals.remainingVolumeCm3 ?? 0} cm³
+                </Text>
+              </View>
+
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Bags</Text>
+                <Text style={styles.summaryMiniValue}>
+                  {results.suitcases?.length || 0}
+                </Text>
+              </View>
+
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Volume Fits</Text>
+                <Text style={styles.summaryMiniValue}>
+                  {results.totals.volumeFits ? "Yes" : "No"}
+                </Text>
+              </View>
             </View>
+          </AppCard>
 
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Total Volume</Text>
-              <Text style={styles.statValue}>
-                {results.totals.totalVolumeCm3 ?? 0} cm³
-              </Text>
-            </View>
-
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Remaining Volume</Text>
-              <Text style={styles.statValue}>
-                {results.totals.remainingVolumeCm3 ?? 0} cm³
-              </Text>
-            </View>
-
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Bags</Text>
-              <Text style={styles.statValue}>
-                {results.suitcases?.length || 0}
-              </Text>
-            </View>
-
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Main Constraint</Text>
-              <Text style={styles.statValue}>
-                {mainConstraint === "none" ? "None" : mainConstraint}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Top Action</Text>
-            <Text style={styles.sectionBody}>{topAction}</Text>
-          </View>
-
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Bag Distribution</Text>
+          <AppCard>
+            <SectionHeader
+              title="Bag Distribution"
+              subtitle="How the current setup is distributed across your bags."
+            />
 
             {results.bagDistribution?.length ? (
               results.bagDistribution.map((bag) => (
-                <View key={bag.id} style={styles.bagCard}>
+                <AppCard key={bag.id} style={styles.innerCard}>
                   <View style={styles.bagTopRow}>
-                    <Text style={styles.bagName}>{bag.name}</Text>
-                    <View
-                      style={[
-                        styles.badge,
-                        bag.volumeFits && bag.weightFits
-                          ? styles.goodBadge
-                          : styles.warnBadge,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.badgeText,
-                          bag.volumeFits && bag.weightFits
-                            ? styles.goodBadgeText
-                            : styles.warnBadgeText,
-                        ]}
-                      >
-                        {bag.volumeFits && bag.weightFits ? "Fits" : "Review"}
+                    <View style={styles.bagNameWrap}>
+                      <Text style={styles.bagName}>{bag.name}</Text>
+                      <Text style={styles.bagSubText}>
+                        Role: {bag.bagRole || bag.bag_role || "main"}
                       </Text>
                     </View>
+
+                    <StatusBadge
+                      label={bag.volumeFits && bag.weightFits ? "Fits" : "Review"}
+                      tone={bag.volumeFits && bag.weightFits ? "success" : "warning"}
+                    />
                   </View>
 
-                  <Text style={styles.metaText}>
-                    <Text style={styles.metaLabel}>Role: </Text>
-                    {bag.bagRole || bag.bag_role || "main"}
-                  </Text>
+                  <View style={styles.metaGroup}>
+                    <Text style={styles.metaText}>
+                      <Text style={styles.metaLabel}>Usage: </Text>
+                      {bag.usedCapacityPercent ?? 0}%
+                    </Text>
 
-                  <Text style={styles.metaText}>
-                    <Text style={styles.metaLabel}>Usage: </Text>
-                    {bag.usedCapacityPercent ?? 0}%
-                  </Text>
+                    <Text style={styles.metaText}>
+                      <Text style={styles.metaLabel}>Used Weight: </Text>
+                      {bag.usedWeightKg ?? 0} kg
+                    </Text>
 
-                  <Text style={styles.metaText}>
-                    <Text style={styles.metaLabel}>Used Weight: </Text>
-                    {bag.usedWeightKg ?? 0} kg
-                  </Text>
-
-                  <Text style={styles.metaText}>
-                    <Text style={styles.metaLabel}>Remaining Volume: </Text>
-                    {bag.remainingVolumeCm3 ?? 0} cm³
-                  </Text>
-                </View>
+                    <Text style={styles.metaText}>
+                      <Text style={styles.metaLabel}>Remaining Volume: </Text>
+                      {bag.remainingVolumeCm3 ?? 0} cm³
+                    </Text>
+                  </View>
+                </AppCard>
               ))
             ) : (
-              <Text style={styles.emptyText}>No bag distribution available.</Text>
+              <EmptyState
+                title="No bag distribution available"
+                description="No bag distribution data is available for this result."
+              />
             )}
-          </View>
+          </AppCard>
 
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Rebalancing Suggestions</Text>
+          <AppCard>
+            <SectionHeader
+              title="Rebalancing Suggestions"
+              subtitle="Suggested moves to improve bag balance."
+            />
 
             {results.bagRebalancingSuggestions?.length ? (
               results.bagRebalancingSuggestions.map((entry, index) => (
-                <View key={index} style={styles.infoCard}>
+                <AppCard key={index} style={styles.innerCard}>
                   <Text style={styles.infoTitle}>
                     Move {entry.itemName} × {entry.quantity}
                   </Text>
@@ -256,21 +295,25 @@ export default function TripResultsScreen({ route }) {
                     From {entry.fromBag?.name} → To {entry.toBag?.name}
                   </Text>
                   <Text style={styles.infoReason}>{entry.reason}</Text>
-                </View>
+                </AppCard>
               ))
             ) : (
-              <Text style={styles.emptyText}>
-                No rebalancing suggestions are needed.
-              </Text>
+              <EmptyState
+                title="No rebalancing suggestions"
+                description="This result does not currently need bag rebalancing."
+              />
             )}
-          </View>
+          </AppCard>
 
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Item Substitution Suggestions</Text>
+          <AppCard>
+            <SectionHeader
+              title="Substitution Suggestions"
+              subtitle="Ideas for simplifying or improving the current item mix."
+            />
 
             {results.itemSubstitutionSuggestions?.length ? (
               results.itemSubstitutionSuggestions.map((entry, index) => (
-                <View key={index} style={styles.infoCard}>
+                <AppCard key={index} style={styles.innerCard}>
                   <Text style={styles.infoTitle}>
                     {entry.type === "replace" &&
                       `Replace ${entry.fromItem} with ${entry.toItem}`}
@@ -280,14 +323,15 @@ export default function TripResultsScreen({ route }) {
                       `Simplify ${entry.fromItem} into ${entry.toItem}`}
                   </Text>
                   <Text style={styles.infoReason}>{entry.reason}</Text>
-                </View>
+                </AppCard>
               ))
             ) : (
-              <Text style={styles.emptyText}>
-                No substitution suggestions are needed.
-              </Text>
+              <EmptyState
+                title="No substitution suggestions"
+                description="No substitution changes are needed for this result."
+              />
             )}
-          </View>
+          </AppCard>
         </View>
       </ScrollView>
     </AppScreen>
@@ -301,6 +345,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: spacing.xl,
+    gap: spacing.lg,
   },
   centerBlock: {
     flex: 1,
@@ -313,36 +358,35 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 15,
   },
-  errorText: {
-    color: colors.danger,
-    fontSize: 15,
-    textAlign: "center",
-  },
   kicker: {
     fontSize: 13,
     fontWeight: "700",
     color: colors.secondary,
-    marginBottom: spacing.sm,
     textTransform: "uppercase",
   },
   title: {
     fontSize: 30,
     fontWeight: "800",
     color: colors.text,
-    marginBottom: spacing.xs,
+    marginTop: 4,
   },
   subtitle: {
     fontSize: 15,
     color: colors.textMuted,
-    marginBottom: spacing.xl,
+    marginTop: 4,
   },
   heroCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 18,
-    padding: spacing.xl,
-    marginBottom: spacing.lg,
+    borderRadius: 20,
+  },
+  heroTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  heroTextBlock: {
+    flex: 1,
   },
   heroLabel: {
     fontSize: 13,
@@ -352,120 +396,105 @@ const styles = StyleSheet.create({
   heroValue: {
     fontSize: 28,
     fontWeight: "800",
-    marginBottom: 8,
+    color: colors.text,
   },
   heroSubtext: {
     fontSize: 14,
     color: colors.textMuted,
     lineHeight: 22,
   },
-  goodText: {
-    color: colors.success,
+  errorCard: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
   },
-  dangerText: {
+  errorText: {
     color: colors.danger,
+    fontSize: 14,
   },
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  topDecisionWrap: {
     gap: spacing.sm,
-    marginBottom: spacing.lg,
   },
-  statCard: {
-    width: "47%",
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginBottom: 6,
-  },
-  statValue: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: colors.text,
-  },
-  sectionCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  sectionBody: {
-    fontSize: 15,
-    color: colors.textMuted,
-    lineHeight: 24,
-  },
-  bagCard: {
+  topDecisionCard: {
     backgroundColor: "#f8fafc",
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 14,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+    padding: spacing.md,
+  },
+  topDecisionLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: 6,
+  },
+  topDecisionValue: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.text,
+  },
+  topDecisionAction: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.text,
+    lineHeight: 22,
+  },
+  summaryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  summaryMiniCard: {
+    minWidth: "47%",
+    flex: 1,
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: spacing.md,
+  },
+  summaryMiniLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  summaryMiniValue: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.text,
+  },
+  innerCard: {
+    backgroundColor: "#f8fafc",
+    marginTop: spacing.sm,
   },
   bagTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     gap: spacing.md,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  bagNameWrap: {
+    flex: 1,
   },
   bagName: {
-    flex: 1,
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
     color: colors.text,
+    marginBottom: 6,
+  },
+  bagSubText: {
+    fontSize: 13,
+    color: colors.textMuted,
+  },
+  metaGroup: {
+    gap: 8,
   },
   metaText: {
     fontSize: 14,
     color: colors.textMuted,
-    marginBottom: 6,
   },
   metaLabel: {
     color: colors.text,
     fontWeight: "700",
-  },
-  badge: {
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  goodBadge: {
-    backgroundColor: "#dcfce7",
-  },
-  goodBadgeText: {
-    color: "#166534",
-  },
-  warnBadge: {
-    backgroundColor: "#fef3c7",
-  },
-  warnBadgeText: {
-    color: "#92400e",
-  },
-  infoCard: {
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
   },
   infoTitle: {
     fontSize: 15,
@@ -482,10 +511,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     lineHeight: 20,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: colors.textMuted,
-    lineHeight: 22,
   },
 });
