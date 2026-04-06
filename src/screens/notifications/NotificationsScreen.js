@@ -90,7 +90,7 @@ export default function NotificationsScreen({ navigation }) {
               description="Your trips currently do not need any reminders."
             />
           ) : (
-            notifications.map((notification) => (
+            notifications.map((notification, index) => (
               <Pressable
                 key={notification.id}
                 onPress={() =>
@@ -103,6 +103,9 @@ export default function NotificationsScreen({ navigation }) {
                 <AppCard style={styles.notificationCard}>
                   <View style={styles.notificationTopRow}>
                     <View style={styles.notificationTextWrap}>
+                      <Text style={styles.notificationIndex}>
+                        Reminder #{index + 1}
+                      </Text>
                       <Text style={styles.notificationTitle}>
                         {notification.title}
                       </Text>
@@ -202,6 +205,11 @@ const styles = StyleSheet.create({
   },
   notificationTextWrap: {
     flex: 1,
+  },
+  notificationIndex: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: 6,
   },
   notificationTitle: {
     fontSize: 17,
