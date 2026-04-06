@@ -1,13 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  Pressable,
 } from "react-native";
 import AppScreen from "../../components/common/AppScreen";
+import AppButton from "../../components/common/AppButton";
+import AppCard from "../../components/common/AppCard";
+import StatusBadge from "../../components/common/StatusBadge";
+import SectionHeader from "../../components/common/SectionHeader";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import {
@@ -122,6 +126,12 @@ export default function TripOverviewScreen({ route, navigation }) {
     return results.totals.overallFits ? "Fits" : "Needs changes";
   }, [results]);
 
+  const overallTone = useMemo(() => {
+    if (overallStatus === "Fits") return "success";
+    if (overallStatus === "Needs changes") return "danger";
+    return "neutral";
+  }, [overallStatus]);
+
   const checklistReady = useMemo(() => {
     if (!items.length) return "Empty";
     const packedCount = items.filter((item) => {
@@ -206,28 +216,14 @@ export default function TripOverviewScreen({ route, navigation }) {
             {trip?.duration_days ? `${trip.duration_days} days` : "No duration"}
           </Text>
 
-          <View style={styles.heroCard}>
+          <AppCard style={styles.heroCard}>
             <View style={styles.heroTopRow}>
-              <View style={{ flex: 1 }}>
+              <View style={styles.heroTextBlock}>
                 <Text style={styles.heroLabel}>Overall Trip Status</Text>
-                <Text
-                  style={[
-                    styles.heroValue,
-                    overallStatus === "Fits"
-                      ? styles.goodText
-                      : overallStatus === "Needs changes"
-                      ? styles.dangerText
-                      : styles.neutralText,
-                  ]}
-                >
-                  {overallStatus}
-                </Text>
+                <Text style={styles.heroValue}>{overallStatus}</Text>
               </View>
 
-              <View style={styles.heroMiniCard}>
-                <Text style={styles.heroMiniLabel}>Items</Text>
-                <Text style={styles.heroMiniValue}>{items.length}</Text>
-              </View>
+              <StatusBadge label={overallStatus} tone={overallTone} />
             </View>
 
             <Text style={styles.heroSubtext}>
@@ -237,22 +233,25 @@ export default function TripOverviewScreen({ route, navigation }) {
                 ? "This trip needs adjustment before travel."
                 : "You still need to generate suggestions or calculate this trip."}
             </Text>
-          </View>
+          </AppCard>
 
           {actionMessage ? (
-            <View style={styles.successCard}>
+            <AppCard style={styles.successCard}>
               <Text style={styles.successText}>{actionMessage}</Text>
-            </View>
+            </AppCard>
           ) : null}
 
           {actionError ? (
-            <View style={styles.errorCard}>
+            <AppCard style={styles.errorCard}>
               <Text style={styles.errorText}>{actionError}</Text>
-            </View>
+            </AppCard>
           ) : null}
 
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Readiness Snapshot</Text>
+          <AppCard style={styles.sectionCard}>
+            <SectionHeader
+              title="Readiness Snapshot"
+              subtitle="A quick view of what is configured and what still needs attention."
+            />
 
             <View style={styles.snapshotGrid}>
               <View style={styles.snapshotCard}>
@@ -287,37 +286,37 @@ export default function TripOverviewScreen({ route, navigation }) {
                 </Text>
               </View>
             </View>
-          </View>
+          </AppCard>
 
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Smart Action Center</Text>
+          <AppCard style={styles.sectionCard}>
+            <SectionHeader
+              title="Smart Action Center"
+              subtitle="The most important next step for this trip right now."
+            />
+
             <Text style={styles.topActionText}>{topAction}</Text>
 
             <View style={styles.primaryActionsRow}>
-              <Pressable
-                style={styles.primaryActionButton}
+              <AppButton
+                title="Generate Suggestions"
                 onPress={handleGenerateSuggestions}
-                disabled={generating}
-              >
-                <Text style={styles.primaryActionButtonText}>
-                  {generating ? "Generating..." : "Generate Suggestions"}
-                </Text>
-              </Pressable>
+                loading={generating}
+              />
 
-              <Pressable
-                style={styles.secondaryActionButton}
+              <AppButton
+                title="Calculate Trip"
                 onPress={handleCalculateTrip}
-                disabled={calculating}
-              >
-                <Text style={styles.secondaryActionButtonText}>
-                  {calculating ? "Calculating..." : "Calculate Trip"}
-                </Text>
-              </Pressable>
+                loading={calculating}
+                variant="secondary"
+              />
             </View>
-          </View>
+          </AppCard>
 
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Quick Navigation</Text>
+          <AppCard style={styles.sectionCard}>
+            <SectionHeader
+              title="Quick Navigation"
+              subtitle="Jump directly into the trip areas you want to manage."
+            />
 
             <View style={styles.quickGrid}>
               <Pressable
@@ -349,7 +348,7 @@ export default function TripOverviewScreen({ route, navigation }) {
                 onPress={() => navigation.navigate("TripTravelDay", { tripId })}
               >
                 <Text style={styles.quickTitle}>Travel Day</Text>
-                <Text style={styles.quickSubtitle}>What to wear and access</Text>
+                <Text style={styles.quickSubtitle}>Wear and access plan</Text>
               </Pressable>
 
               <Pressable
@@ -360,10 +359,14 @@ export default function TripOverviewScreen({ route, navigation }) {
                 <Text style={styles.quickSubtitle}>Fit and smart actions</Text>
               </Pressable>
             </View>
-          </View>
+          </AppCard>
 
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Trip Details</Text>
+          <AppCard style={styles.sectionCard}>
+            <SectionHeader
+              title="Trip Details"
+              subtitle="Context used for suggestions and calculation."
+            />
+
             <Text style={styles.detailText}>
               <Text style={styles.detailLabel}>Travel Type: </Text>
               {trip?.travel_type || "—"}
@@ -380,7 +383,7 @@ export default function TripOverviewScreen({ route, navigation }) {
               <Text style={styles.detailLabel}>Results Status: </Text>
               {overallStatus}
             </Text>
-          </View>
+          </AppCard>
         </View>
       </ScrollView>
     </AppScreen>
@@ -394,6 +397,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: spacing.xl,
+    gap: spacing.lg,
   },
   centerBlock: {
     flex: 1,
@@ -406,41 +410,35 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 15,
   },
-  errorText: {
-    color: colors.danger,
-    fontSize: 14,
-    textAlign: "center",
-  },
   kicker: {
     fontSize: 13,
     fontWeight: "700",
     color: colors.secondary,
-    marginBottom: spacing.sm,
     textTransform: "uppercase",
   },
   title: {
     fontSize: 30,
     fontWeight: "800",
     color: colors.text,
-    marginBottom: spacing.xs,
+    marginTop: 4,
   },
   subtitle: {
     fontSize: 15,
     color: colors.textMuted,
-    marginBottom: spacing.xl,
+    marginTop: 4,
   },
   heroCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: 20,
-    padding: spacing.xl,
-    marginBottom: spacing.lg,
   },
   heroTopRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     gap: spacing.md,
     marginBottom: spacing.md,
+  },
+  heroTextBlock: {
+    flex: 1,
   },
   heroLabel: {
     fontSize: 13,
@@ -450,48 +448,16 @@ const styles = StyleSheet.create({
   heroValue: {
     fontSize: 28,
     fontWeight: "800",
+    color: colors.text,
   },
   heroSubtext: {
     fontSize: 14,
     color: colors.textMuted,
     lineHeight: 22,
   },
-  heroMiniCard: {
-    minWidth: 90,
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heroMiniLabel: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginBottom: 4,
-  },
-  heroMiniValue: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: colors.text,
-  },
-  goodText: {
-    color: colors.success,
-  },
-  dangerText: {
-    color: colors.danger,
-  },
-  neutralText: {
-    color: colors.text,
-  },
   successCard: {
     backgroundColor: "#f0fdf4",
-    borderWidth: 1,
     borderColor: "#bbf7d0",
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
   },
   successText: {
     color: "#166534",
@@ -500,26 +466,13 @@ const styles = StyleSheet.create({
   },
   errorCard: {
     backgroundColor: "#fef2f2",
-    borderWidth: 1,
     borderColor: "#fecaca",
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
   },
-  sectionCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 18,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+  errorText: {
+    color: colors.danger,
+    fontSize: 14,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
+  sectionCard: {},
   snapshotGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -553,33 +506,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
     lineHeight: 24,
-    marginBottom: spacing.lg,
     fontWeight: "600",
+    marginBottom: spacing.lg,
   },
   primaryActionsRow: {
     gap: spacing.sm,
-  },
-  primaryActionButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  primaryActionButtonText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  secondaryActionButton: {
-    backgroundColor: "#e2e8f0",
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  secondaryActionButtonText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "700",
   },
   quickGrid: {
     flexDirection: "row",
@@ -615,4 +546,3 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
-
