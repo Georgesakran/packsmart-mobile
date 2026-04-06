@@ -387,6 +387,109 @@ export default function TripOverviewScreen({ route, navigation }) {
     };
   }, [suitcases, items, results]);
 
+  const timeline = useMemo(() => {
+    const hasBags = suitcases.length > 0;
+    const hasItems = items.length > 0;
+    const hasResults = !!results?.totals;
+    const overallFits = !!results?.totals?.overallFits;
+  
+    const checklistCompletedCount = items.filter((item) => {
+      const status = item.packingStatus || item.packing_status || "pending";
+      return status !== "pending";
+    }).length;
+  
+    const checklistComplete = hasItems && checklistCompletedCount === items.length;
+  
+    const travelDayConfiguredCount = items.filter((item) => {
+      const mode = item.travelDayMode || item.travel_day_mode || "normal";
+      return mode !== "normal";
+    }).length;
+  
+    const travelDayReady = hasItems && travelDayConfiguredCount > 0;
+  
+    const steps = [
+      {
+        key: "setup",
+        title: "Trip Setup",
+        description: "Add the basic trip structure, including bags and items.",
+        status: !hasBags || !hasItems ? "current" : "done",
+      },
+      {
+        key: "planning",
+        title: "Planning & Suggestions",
+        description: "Generate suggestions or manually build your packing list.",
+        status:
+          hasBags && hasItems && !hasResults
+            ? "current"
+            : hasResults
+            ? "done"
+            : "upcoming",
+      },
+      {
+        key: "calculation",
+        title: "Calculation & Fit Check",
+        description: "Calculate the trip and review fit, balance, and adjustments.",
+        status:
+          hasResults && !overallFits
+            ? "current"
+            : hasResults && overallFits
+            ? "done"
+            : "upcoming",
+      },
+      {
+        key: "execution",
+        title: "Packing Execution",
+        description: "Use the checklist to track what is packed or skipped.",
+        status:
+          hasResults && overallFits && !checklistComplete
+            ? "current"
+            : checklistComplete
+            ? "done"
+            : "upcoming",
+      },
+      {
+        key: "travel-day",
+        title: "Travel Day Prep",
+        description: "Mark what to wear, what to keep accessible, and final essentials.",
+        status:
+          checklistComplete && !travelDayReady
+            ? "current"
+            : checklistComplete && travelDayReady
+            ? "done"
+            : "upcoming",
+      },
+    ];
+  
+    let phaseLabel = "Getting started";
+    let nextFocus = "Begin by setting up bags and items.";
+  
+    if (!hasBags || !hasItems) {
+      phaseLabel = "Setup stage";
+      nextFocus = "Build the trip foundation with bags and items.";
+    } else if (!hasResults) {
+      phaseLabel = "Planning stage";
+      nextFocus = "Generate suggestions or calculate the trip.";
+    } else if (hasResults && !overallFits) {
+      phaseLabel = "Adjustment stage";
+      nextFocus = "Fix fit issues before moving into packing execution.";
+    } else if (overallFits && !checklistComplete) {
+      phaseLabel = "Execution stage";
+      nextFocus = "Continue packing and update the checklist.";
+    } else if (checklistComplete && !travelDayReady) {
+      phaseLabel = "Pre-departure stage";
+      nextFocus = "Set travel-day and accessible items.";
+    } else if (checklistComplete && travelDayReady) {
+      phaseLabel = "Travel-ready stage";
+      nextFocus = "Do a final review and keep essentials accessible.";
+    }
+  
+    return {
+      phaseLabel,
+      nextFocus,
+      steps,
+    };
+  }, [suitcases, items, results]);
+
   if (loading) {
     return (
       <AppScreen>
@@ -586,6 +689,57 @@ export default function TripOverviewScreen({ route, navigation }) {
                 ))}
               </View>
             ) : null}
+          </AppCard>
+
+          <AppCard style={styles.sectionCard}>
+            <SectionHeader
+              title="Smart Travel Timeline"
+              subtitle="A simple journey view showing what stage this trip is in right now."
+            />
+
+            <View style={styles.timelineIntro}>
+              <StatusBadge label={timeline.phaseLabel} tone="info" />
+              <Text style={styles.timelineFocusText}>{timeline.nextFocus}</Text>
+            </View>
+
+            <View style={styles.timelineStepsWrap}>
+              {timeline.steps.map((step) => (
+                <View key={step.key} style={styles.timelineStepRow}>
+                  <View
+                    style={[
+                      styles.timelineDot,
+                      step.status === "done" && styles.timelineDotDone,
+                      step.status === "current" && styles.timelineDotCurrent,
+                      step.status === "upcoming" && styles.timelineDotUpcoming,
+                    ]}
+                  />
+
+                  <View style={styles.timelineStepContent}>
+                    <View style={styles.timelineStepHeader}>
+                      <Text style={styles.timelineStepTitle}>{step.title}</Text>
+                      <StatusBadge
+                        label={
+                          step.status === "done"
+                            ? "Done"
+                            : step.status === "current"
+                            ? "Current"
+                            : "Upcoming"
+                        }
+                        tone={
+                          step.status === "done"
+                            ? "success"
+                            : step.status === "current"
+                            ? "info"
+                            : "neutral"
+                        }
+                      />
+                    </View>
+
+                    <Text style={styles.timelineStepDescription}>{step.description}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
           </AppCard>
 
           <AppCard style={styles.sectionCard}>
@@ -948,6 +1102,64 @@ const styles = StyleSheet.create({
   },
   copilotAlertText: {
     flex: 1,
+    fontSize: 14,
+    color: colors.textMuted,
+    lineHeight: 20,
+  },
+  timelineIntro: {
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+  timelineFocusText: {
+    fontSize: 14,
+    color: colors.textMuted,
+    lineHeight: 22,
+  },
+  timelineStepsWrap: {
+    gap: spacing.md,
+  },
+  timelineStepRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md,
+  },
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 999,
+    marginTop: 6,
+  },
+  timelineDotDone: {
+    backgroundColor: colors.success,
+  },
+  timelineDotCurrent: {
+    backgroundColor: colors.primary,
+  },
+  timelineDotUpcoming: {
+    backgroundColor: "#cbd5e1",
+  },
+  timelineStepContent: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: spacing.md,
+  },
+  timelineStepHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.md,
+    marginBottom: 8,
+  },
+  timelineStepTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  timelineStepDescription: {
     fontSize: 14,
     color: colors.textMuted,
     lineHeight: 20,
