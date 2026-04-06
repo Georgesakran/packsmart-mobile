@@ -14,6 +14,7 @@ import EmptyState from "../../components/common/EmptyState";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { getTripById, getTripResults } from "../../api/tripApi";
+import BagUsageCard from "../../components/trips/BagUsageCard";
 
 export default function TripResultsScreen({ route }) {
   const { tripId } = route.params || {};
@@ -236,47 +237,16 @@ export default function TripResultsScreen({ route }) {
               subtitle="How the current setup is distributed across your bags."
             />
 
-            {results.bagDistribution?.length ? (
-              results.bagDistribution.map((bag) => (
-                <AppCard key={bag.id} style={styles.innerCard}>
-                  <View style={styles.bagTopRow}>
-                    <View style={styles.bagNameWrap}>
-                      <Text style={styles.bagName}>{bag.name}</Text>
-                      <Text style={styles.bagSubText}>
-                        Role: {bag.bagRole || bag.bag_role || "main"}
-                      </Text>
-                    </View>
-
-                    <StatusBadge
-                      label={bag.volumeFits && bag.weightFits ? "Fits" : "Review"}
-                      tone={bag.volumeFits && bag.weightFits ? "success" : "warning"}
-                    />
-                  </View>
-
-                  <View style={styles.metaGroup}>
-                    <Text style={styles.metaText}>
-                      <Text style={styles.metaLabel}>Usage: </Text>
-                      {bag.usedCapacityPercent ?? 0}%
-                    </Text>
-
-                    <Text style={styles.metaText}>
-                      <Text style={styles.metaLabel}>Used Weight: </Text>
-                      {bag.usedWeightKg ?? 0} kg
-                    </Text>
-
-                    <Text style={styles.metaText}>
-                      <Text style={styles.metaLabel}>Remaining Volume: </Text>
-                      {bag.remainingVolumeCm3 ?? 0} cm³
-                    </Text>
-                  </View>
-                </AppCard>
-              ))
-            ) : (
-              <EmptyState
-                title="No bag distribution available"
-                description="No bag distribution data is available for this result."
-              />
-            )}
+              {results.bagDistribution?.length ? (
+                results.bagDistribution.map((bag) => (
+                  <BagUsageCard key={bag.id} bag={bag} />
+                ))
+              ) : (
+                <EmptyState
+                  title="No bag distribution available"
+                  description="No bag distribution data is available for this result."
+                />
+              )}
           </AppCard>
 
           <AppCard>
@@ -464,37 +434,6 @@ const styles = StyleSheet.create({
   innerCard: {
     backgroundColor: "#f8fafc",
     marginTop: spacing.sm,
-  },
-  bagTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  bagNameWrap: {
-    flex: 1,
-  },
-  bagName: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: 6,
-  },
-  bagSubText: {
-    fontSize: 13,
-    color: colors.textMuted,
-  },
-  metaGroup: {
-    gap: 8,
-  },
-  metaText: {
-    fontSize: 14,
-    color: colors.textMuted,
-  },
-  metaLabel: {
-    color: colors.text,
-    fontWeight: "700",
   },
   infoTitle: {
     fontSize: 15,
