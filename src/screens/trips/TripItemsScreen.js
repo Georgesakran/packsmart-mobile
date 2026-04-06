@@ -1,11 +1,22 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import AppScreen from "../../components/common/AppScreen";
+import AppCard from "../../components/common/AppCard";
+import AppButton from "../../components/common/AppButton";
+import StatusBadge from "../../components/common/StatusBadge";
+import SectionHeader from "../../components/common/SectionHeader";
+import EmptyState from "../../components/common/EmptyState";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { getTripById, getTripItems } from "../../api/tripApi";
 
-export default function TripItemsScreen({ route }) {
+export default function TripItemsScreen({ route, navigation }) {
   const { tripId } = route.params || {};
 
   const [loading, setLoading] = useState(true);
@@ -34,10 +45,14 @@ export default function TripItemsScreen({ route }) {
   }, [tripId]);
 
   useEffect(() => {
+    loadItems();
+  }, [loadItems]);
+
+  useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
       loadItems();
     });
-  
+
     return unsubscribe;
   }, [navigation, loadItems]);
 
@@ -50,21 +65,42 @@ export default function TripItemsScreen({ route }) {
     );
   };
 
-  const getPackingStatusLabel = (item) => {
-    const status = item.packingStatus || item.packing_status || "pending";
+  const getPackingStatus = (item) => {
+    return item.packingStatus || item.packing_status || "pending";
+  };
 
-    if (status === "wear_on_travel_day") return "Travel Day";
+  const getPackingTone = (item) => {
+    const status = getPackingStatus(item);
+
+    if (status === "packed") return "success";
+    if (status === "wear_on_travel_day") return "info";
+    if (status === "skip") return "danger";
+    return "neutral";
+  };
+
+  const getPackingLabel = (item) => {
+    const status = getPackingStatus(item);
+
     if (status === "packed") return "Packed";
+    if (status === "wear_on_travel_day") return "Travel Day";
     if (status === "skip") return "Skipped";
     return "Pending";
   };
 
-  const getTravelDayModeLabel = (item) => {
+  const getTravelDayMode = (item) => {
     const mode = item.travelDayMode || item.travel_day_mode || "normal";
 
-    if (mode === "wear_on_travel_day") return "Wear on Travel Day";
-    if (mode === "keep_accessible") return "Keep Accessible";
+    if (mode === "wear_on_travel_day") return "Wear Today";
+    if (mode === "keep_accessible") return "Accessible";
     return "Normal";
+  };
+
+  const getPriorityTone = (item) => {
+    const priority = item.priority || "recommended";
+
+    if (priority === "essential") return "danger";
+    if (priority === "optional") return "neutral";
+    return "warning";
   };
 
   if (loading) {
@@ -78,143 +114,162 @@ export default function TripItemsScreen({ route }) {
     );
   }
 
-  if (error) {
-    return (
-      <AppScreen>
-        <View style={styles.centerBlock}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      </AppScreen>
-    );
-  }
-
   return (
     <AppScreen>
-      <View style={styles.container}>
-        <Text style={styles.kicker}>Trip / Items</Text>
-        <Text style={styles.title}>{trip?.trip_name || "Trip Items"}</Text>
-        <Text style={styles.subtitle}>
-          Review all items linked to this trip.
-        </Text>
-        
-        <Pressable
-          style={styles.addButton}
-          onPress={() =>
-            navigation.navigate("AddTripItem", {
-              tripId,
-            })
-          }
-        >
-          <Text style={styles.addButtonText}>+ Add Item</Text>
-        </Pressable>
-        <Pressable
-          style={styles.secondaryTopButton}
-          onPress={() =>
-            navigation.navigate("ApplyTemplate", {
-              tripId,
-            })
-          }
-        >
-          <Text style={styles.secondaryTopButtonText}>Apply Template</Text>
-        </Pressable>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.container}>
+          <Text style={styles.kicker}>Trip / Items</Text>
+          <Text style={styles.title}>{trip?.trip_name || "Trip Items"}</Text>
+          <Text style={styles.subtitle}>
+            Review, add, and manage all items linked to this trip.
+          </Text>
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>Total Items</Text>
-          <Text style={styles.summaryValue}>{items.length}</Text>
-        </View>
+          <View style={styles.topActionsRow}>
+            <AppButton
+              title="Add Item"
+              onPress={() =>
+                navigation.navigate("AddTripItem", {
+                  tripId,
+                })
+              }
+              style={styles.flexButton}
+            />
 
-        {items.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>No items added yet</Text>
-            <Text style={styles.emptyText}>
-              This trip does not have any items assigned yet.
-            </Text>
+            <AppButton
+              title="Apply Template"
+              variant="secondary"
+              onPress={() =>
+                navigation.navigate("ApplyTemplate", {
+                  tripId,
+                })
+              }
+              style={styles.flexButton}
+            />
           </View>
-        ) : (
-          items.map((item) => (
-            <View key={item.id} style={styles.itemCard}>
-              <View style={styles.itemTopRow}>
-                <Text style={styles.itemName}>
-                  {getDisplayName(item)} × {item.quantity || 1}
+
+          <AppButton
+            title="Refresh"
+            variant="secondary"
+            onPress={loadItems}
+          />
+
+          {error ? (
+            <AppCard style={styles.errorCard}>
+              <Text style={styles.errorText}>{error}</Text>
+            </AppCard>
+          ) : null}
+
+          <AppCard>
+            <SectionHeader
+              title="Items Summary"
+              subtitle="A quick view of the current item setup for this trip."
+            />
+
+            <View style={styles.summaryGrid}>
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Total Items</Text>
+                <Text style={styles.summaryMiniValue}>{items.length}</Text>
+              </View>
+
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Packed/Updated</Text>
+                <Text style={styles.summaryMiniValue}>
+                  {
+                    items.filter((item) => {
+                      const status =
+                        item.packingStatus || item.packing_status || "pending";
+                      return status !== "pending";
+                    }).length
+                  }
                 </Text>
               </View>
-
-              <View style={styles.badgesRow}>
-                <View style={[styles.badge, styles.statusBadge]}>
-                  <Text style={[styles.badgeText, styles.statusBadgeText]}>
-                    {getPackingStatusLabel(item)}
-                  </Text>
-                </View>
-
-                <View style={[styles.badge, styles.travelDayBadge]}>
-                  <Text style={[styles.badgeText, styles.travelDayBadgeText]}>
-                    {getTravelDayModeLabel(item)}
-                  </Text>
-                </View>
-
-                <View style={[styles.badge, styles.priorityBadge]}>
-                  <Text style={[styles.badgeText, styles.priorityBadgeText]}>
-                    {item.priority || "recommended"}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.metaRow}>
-                <Text style={styles.metaText}>
-                  <Text style={styles.metaLabel}>Category: </Text>
-                  {item.category || "Not set"}
-                </Text>
-              </View>
-
-              <View style={styles.metaRow}>
-                <Text style={styles.metaText}>
-                  <Text style={styles.metaLabel}>Size: </Text>
-                  {item.size_code || item.sizeCode || "Not set"}
-                </Text>
-              </View>
-
-              <View style={styles.metaRow}>
-                <Text style={styles.metaText}>
-                  <Text style={styles.metaLabel}>Assigned Bag: </Text>
-                  {item.assigned_bag_name && item.assigned_bag_role
-                    ? `${item.assigned_bag_name} (${item.assigned_bag_role})`
-                    : item.preferredBagRole
-                    ? `Auto / preferred: ${item.preferredBagRole}`
-                    : "Auto"}
-                </Text>
-              </View>
-
-              <View style={styles.metaRow}>
-                <Text style={styles.metaText}>
-                  <Text style={styles.metaLabel}>Remove Priority: </Text>
-                  {item.removePriority || "medium"}
-                </Text>
-              </View>
-
-              <Pressable
-                style={styles.editButton}
-                onPress={() =>
-                  navigation.navigate("EditTripItem", {
-                    tripId,
-                    item,
-                  })
-                }
-              >
-                <Text style={styles.editButtonText}>Edit Item</Text>
-              </Pressable>
-
             </View>
-          ))
-        )}
-      </View>
+          </AppCard>
+
+          {items.length === 0 ? (
+            <EmptyState
+              title="No items added yet"
+              description="This trip does not have any items assigned yet."
+            />
+          ) : (
+            items.map((item) => (
+              <AppCard key={item.id}>
+                <View style={styles.itemTopRow}>
+                  <View style={styles.itemTitleWrap}>
+                    <Text style={styles.itemTitle}>
+                      {getDisplayName(item)} × {item.quantity || 1}
+                    </Text>
+                    <Text style={styles.itemSubTitle}>
+                      Category: {item.category || "Not set"}
+                    </Text>
+                  </View>
+
+                  <StatusBadge
+                    label={getPackingLabel(item)}
+                    tone={getPackingTone(item)}
+                  />
+                </View>
+
+                <View style={styles.badgesRow}>
+                  <StatusBadge
+                    label={getTravelDayMode(item)}
+                    tone="info"
+                  />
+                  <StatusBadge
+                    label={item.priority || "recommended"}
+                    tone={getPriorityTone(item)}
+                  />
+                </View>
+
+                <View style={styles.metaGroup}>
+                  <Text style={styles.metaText}>
+                    <Text style={styles.metaLabel}>Size: </Text>
+                    {item.size_code || item.sizeCode || "Not set"}
+                  </Text>
+
+                  <Text style={styles.metaText}>
+                    <Text style={styles.metaLabel}>Assigned Bag: </Text>
+                    {item.assigned_bag_name && item.assigned_bag_role
+                      ? `${item.assigned_bag_name} (${item.assigned_bag_role})`
+                      : item.preferredBagRole
+                      ? `Auto / preferred: ${item.preferredBagRole}`
+                      : "Auto"}
+                  </Text>
+
+                  <Text style={styles.metaText}>
+                    <Text style={styles.metaLabel}>Remove Priority: </Text>
+                    {item.removePriority || item.remove_priority || "medium"}
+                  </Text>
+                </View>
+
+                <AppButton
+                  title="Edit Item"
+                  variant="secondary"
+                  onPress={() =>
+                    navigation.navigate("EditTripItem", {
+                      tripId,
+                      item,
+                    })
+                  }
+                  style={styles.editButton}
+                />
+              </AppCard>
+            ))
+          )}
+        </View>
+      </ScrollView>
     </AppScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: spacing.xl,
+  },
   container: {
     flex: 1,
     padding: spacing.xl,
+    gap: spacing.lg,
   },
   centerBlock: {
     flex: 1,
@@ -227,80 +282,81 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 15,
   },
-  errorText: {
-    color: colors.danger,
-    fontSize: 15,
-    textAlign: "center",
-  },
   kicker: {
     fontSize: 13,
     fontWeight: "700",
     color: colors.secondary,
-    marginBottom: spacing.sm,
     textTransform: "uppercase",
   },
   title: {
     fontSize: 30,
     fontWeight: "800",
     color: colors.text,
-    marginBottom: spacing.xs,
+    marginTop: 4,
   },
   subtitle: {
     fontSize: 15,
     color: colors.textMuted,
-    marginBottom: spacing.xl,
+    marginTop: 4,
   },
-  summaryCard: {
-    backgroundColor: colors.surface,
+  topActionsRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  flexButton: {
+    flex: 1,
+  },
+  errorCard: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: 14,
+  },
+  summaryGrid: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    flexWrap: "wrap",
+  },
+  summaryMiniCard: {
+    flex: 1,
+    minWidth: "47%",
+    backgroundColor: "#f8fafc",
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    borderRadius: 14,
+    padding: spacing.md,
   },
-  summaryLabel: {
-    fontSize: 13,
+  summaryMiniLabel: {
+    fontSize: 12,
     color: colors.textMuted,
     marginBottom: 6,
   },
-  summaryValue: {
-    fontSize: 24,
+  summaryMiniValue: {
+    fontSize: 18,
     fontWeight: "800",
     color: colors.text,
   },
-  emptyCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  emptyText: {
-    fontSize: 15,
-    color: colors.textMuted,
-    lineHeight: 22,
-  },
-  itemCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
+  itemTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.md,
     marginBottom: spacing.md,
   },
-  itemTopRow: {
-    marginBottom: spacing.sm,
+  itemTitleWrap: {
+    flex: 1,
   },
-  itemName: {
+  itemTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: colors.text,
+    marginBottom: 6,
+  },
+  itemSubTitle: {
+    fontSize: 13,
+    color: colors.textMuted,
   },
   badgesRow: {
     flexDirection: "row",
@@ -308,36 +364,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
-  badge: {
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  statusBadge: {
-    backgroundColor: "#e5e7eb",
-  },
-  travelDayBadge: {
-    backgroundColor: "#dbeafe",
-  },
-  priorityBadge: {
-    backgroundColor: "#dcfce7",
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  statusBadgeText: {
-    color: "#374151",
-  },
-  travelDayBadgeText: {
-    color: "#1d4ed8",
-  },
-  priorityBadgeText: {
-    color: "#166534",
-    textTransform: "capitalize",
-  },
-  metaRow: {
-    marginBottom: 8,
+  metaGroup: {
+    gap: 8,
   },
   metaText: {
     fontSize: 14,
@@ -347,42 +375,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: "700",
   },
-  addButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignSelf: "flex-start",
-    marginBottom: spacing.lg,
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  secondaryTopButton: {
-    backgroundColor: "#e2e8f0",
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignSelf: "flex-start",
-    marginBottom: spacing.lg,
-  },
-  secondaryTopButtonText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "700",
-  },
   editButton: {
-    marginTop: spacing.md,
-    backgroundColor: "#e2e8f0",
-    borderRadius: 12,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  editButtonText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "700",
+    marginTop: spacing.lg,
   },
 });
