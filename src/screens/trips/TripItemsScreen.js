@@ -34,8 +34,12 @@ export default function TripItemsScreen({ route }) {
   }, [tripId]);
 
   useEffect(() => {
-    loadItems();
-  }, [loadItems]);
+    const unsubscribe = navigation.addListener("focus", () => {
+      loadItems();
+    });
+  
+    return unsubscribe;
+  }, [navigation, loadItems]);
 
   const getDisplayName = (item) => {
     return (
@@ -92,6 +96,16 @@ export default function TripItemsScreen({ route }) {
         <Text style={styles.subtitle}>
           Review all items linked to this trip.
         </Text>
+        <Pressable
+          style={styles.addButton}
+          onPress={() =>
+            navigation.navigate("AddTripItem", {
+              tripId,
+            })
+          }
+        >
+          <Text style={styles.addButtonText}>+ Add Item</Text>
+        </Pressable>
 
         <View style={styles.summaryCard}>
           <Text style={styles.summaryLabel}>Total Items</Text>
@@ -307,6 +321,19 @@ const styles = StyleSheet.create({
   },
   metaLabel: {
     color: colors.text,
+    fontWeight: "700",
+  },
+  addButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignSelf: "flex-start",
+    marginBottom: spacing.lg,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 14,
     fontWeight: "700",
   },
 });

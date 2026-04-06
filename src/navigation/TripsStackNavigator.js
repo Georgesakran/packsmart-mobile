@@ -9,6 +9,7 @@ import TripTravelDayScreen from "../screens/trips/TripTravelDayScreen";
 import TripResultsScreen from "../screens/trips/TripResultsScreen";
 import CreateTripScreen from "../screens/trips/CreateTripScreen";
 import AddTripBagScreen from "../screens/trips/AddTripBagScreen";
+import AddTripItemScreen from "../screens/trips/AddTripItemScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -59,6 +60,12 @@ export default function TripsStackNavigator() {
         name="AddTripBag"
         component={AddTripBagScreen}
         options={{ title: "Add Bag" }}
+      />
+
+      <Stack.Screen
+        name="AddTripItem"
+        component={AddTripItemScreen}
+        options={{ title: "Add Item" }}
       />
     </Stack.Navigator>
   );

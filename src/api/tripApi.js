@@ -110,3 +110,31 @@ export const createTripBag = async (
 
   return response.data;
 };
+
+export const createTripItem = async (
+  tripId,
+  {
+    customName,
+    quantity,
+    category,
+    sizeCode,
+    packBehavior,
+    baseVolumeCm3,
+    baseWeightG,
+    assignedBagId,
+  }
+) => {
+  const response = await client.post(`/trips/${tripId}/items`, {
+    sourceType: "custom",
+    customName,
+    quantity,
+    category,
+    sizeCode,
+    packBehavior,
+    baseVolumeCm3,
+    baseWeightG,
+    assignedBagId,
+  });
+
+  return response.data;
+};
