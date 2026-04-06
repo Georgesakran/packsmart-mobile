@@ -155,6 +155,74 @@ export default function TripOverviewScreen({ route, navigation }) {
     return `${taggedCount} items set`;
   }, [items]);
 
+  const readiness = useMemo(() => {
+    const bagsScore = suitcases.length > 0 ? 25 : 0;
+    const itemsScore = items.length > 0 ? 20 : 0;
+    const resultsScore = results?.totals ? 20 : 0;
+  
+    const checklistCompletedCount = items.filter((item) => {
+      const status = item.packingStatus || item.packing_status || "pending";
+      return status !== "pending";
+    }).length;
+  
+    const checklistScore =
+      items.length > 0 ? Math.round((checklistCompletedCount / items.length) * 20) : 0;
+  
+    const travelDayConfiguredCount = items.filter((item) => {
+      const mode = item.travelDayMode || item.travel_day_mode || "normal";
+      return mode !== "normal";
+    }).length;
+  
+    const travelDayScore =
+      items.length > 0 ? Math.round((travelDayConfiguredCount / items.length) * 15) : 0;
+  
+    const totalScore =
+      bagsScore + itemsScore + resultsScore + checklistScore + travelDayScore;
+  
+    let label = "Getting started";
+    let tone = "neutral";
+  
+    if (totalScore >= 85) {
+      label = "Almost ready";
+      tone = "success";
+    } else if (totalScore >= 60) {
+      label = "Good progress";
+      tone = "info";
+    } else if (totalScore >= 35) {
+      label = "Needs work";
+      tone = "warning";
+    } else {
+      label = "Not ready";
+      tone = "danger";
+    }
+  
+    const missing = [];
+  
+    if (!suitcases.length) missing.push("Add at least one bag");
+    if (!items.length) missing.push("Add items or generate suggestions");
+    if (!results?.totals) missing.push("Calculate the trip");
+    if (items.length > 0 && checklistCompletedCount === 0) {
+      missing.push("Start the checklist");
+    }
+    if (items.length > 0 && travelDayConfiguredCount === 0) {
+      missing.push("Set travel-day items");
+    }
+  
+    return {
+      totalScore,
+      label,
+      tone,
+      missing,
+      breakdown: {
+        bagsScore,
+        itemsScore,
+        resultsScore,
+        checklistScore,
+        travelDayScore,
+      },
+    };
+  }, [suitcases, items, results]);
+
   const topAction = useMemo(() => {
     const rebalance = results?.bagRebalancingSuggestions?.[0];
     if (rebalance) {
@@ -233,6 +301,76 @@ export default function TripOverviewScreen({ route, navigation }) {
                 ? "This trip needs adjustment before travel."
                 : "You still need to generate suggestions or calculate this trip."}
             </Text>
+          </AppCard>
+
+          <AppCard style={styles.sectionCard}>
+            <SectionHeader
+              title="Readiness Score"
+              subtitle="A quick score showing how close this trip is to being fully ready."
+            />
+
+            <View style={styles.readinessTopRow}>
+              <View>
+                <Text style={styles.readinessScore}>{readiness.totalScore}/100</Text>
+                <Text style={styles.readinessLabel}>{readiness.label}</Text>
+              </View>
+
+              <StatusBadge label={readiness.label} tone={readiness.tone} />
+            </View>
+
+            <View style={styles.readinessBarsWrap}>
+              <View style={styles.readinessRow}>
+                <Text style={styles.readinessRowLabel}>Bags</Text>
+                <Text style={styles.readinessRowValue}>
+                  {readiness.breakdown.bagsScore}/25
+                </Text>
+              </View>
+
+              <View style={styles.readinessRow}>
+                <Text style={styles.readinessRowLabel}>Items</Text>
+                <Text style={styles.readinessRowValue}>
+                  {readiness.breakdown.itemsScore}/20
+                </Text>
+              </View>
+
+              <View style={styles.readinessRow}>
+                <Text style={styles.readinessRowLabel}>Results</Text>
+                <Text style={styles.readinessRowValue}>
+                  {readiness.breakdown.resultsScore}/20
+                </Text>
+              </View>
+
+              <View style={styles.readinessRow}>
+                <Text style={styles.readinessRowLabel}>Checklist</Text>
+                <Text style={styles.readinessRowValue}>
+                  {readiness.breakdown.checklistScore}/20
+                </Text>
+              </View>
+
+              <View style={styles.readinessRow}>
+                <Text style={styles.readinessRowLabel}>Travel Day</Text>
+                <Text style={styles.readinessRowValue}>
+                  {readiness.breakdown.travelDayScore}/15
+                </Text>
+              </View>
+            </View>
+
+            {readiness.missing.length > 0 ? (
+              <View style={styles.readinessMissingWrap}>
+                <Text style={styles.readinessMissingTitle}>What to improve next</Text>
+                {readiness.missing.map((item, index) => (
+                  <Text key={index} style={styles.readinessMissingItem}>
+                    • {item}
+                  </Text>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.readinessMissingWrap}>
+                <Text style={styles.readinessPerfectText}>
+                  This trip is in a very strong state. Keep going with final execution.
+                </Text>
+              </View>
+            )}
           </AppCard>
 
           {actionMessage ? (
@@ -545,4 +683,69 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: "700",
   },
+  readinessTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  readinessScore: {
+    fontSize: 30,
+    fontWeight: "800",
+    color: colors.text,
+    marginBottom: 4,
+  },
+  readinessLabel: {
+    fontSize: 14,
+    color: colors.textMuted,
+  },
+  readinessBarsWrap: {
+    gap: spacing.sm,
+  },
+  readinessRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  readinessRowLabel: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: "600",
+  },
+  readinessRowValue: {
+    fontSize: 14,
+    color: colors.textMuted,
+    fontWeight: "700",
+  },
+  readinessMissingWrap: {
+    marginTop: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  readinessMissingTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  readinessMissingItem: {
+    fontSize: 14,
+    color: colors.textMuted,
+    lineHeight: 22,
+  },
+  readinessPerfectText: {
+    fontSize: 14,
+    color: colors.success,
+    lineHeight: 22,
+    fontWeight: "600",
+  },
+
 });
