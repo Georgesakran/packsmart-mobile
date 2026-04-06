@@ -252,6 +252,141 @@ export default function TripOverviewScreen({ route, navigation }) {
     return "No urgent action needed";
   }, [results, items, suitcases]);
 
+  const copilot = useMemo(() => {
+    const alerts = [];
+  
+    const hasBags = suitcases.length > 0;
+    const hasItems = items.length > 0;
+    const hasResults = !!results?.totals;
+  
+    const checklistCompletedCount = items.filter((item) => {
+      const status = item.packingStatus || item.packing_status || "pending";
+      return status !== "pending";
+    }).length;
+  
+    const travelDayConfiguredCount = items.filter((item) => {
+      const mode = item.travelDayMode || item.travel_day_mode || "normal";
+      return mode !== "normal";
+    }).length;
+  
+    const resultTotals = results?.totals;
+    const mainConstraint = results?.smartAdjustments?.mainConstraint || "none";
+    const firstAdjustment = results?.smartAdjustments?.adjustments?.[0];
+    const firstRebalance = results?.bagRebalancingSuggestions?.[0];
+    const firstSubstitution = results?.itemSubstitutionSuggestions?.[0];
+  
+    let status = "Waiting";
+    let tone = "neutral";
+    let headline = "Start building this trip";
+    let nextStep = "Add bags and items or generate suggestions.";
+  
+    if (!hasBags) {
+      status = "Blocked";
+      tone = "danger";
+      headline = "This trip has no bags yet";
+      nextStep = "Add at least one bag before calculation.";
+      alerts.push("No bag is configured for this trip.");
+    } else if (!hasItems) {
+      status = "Needs input";
+      tone = "warning";
+      headline = "This trip has no items yet";
+      nextStep = "Generate suggestions or add custom items.";
+      alerts.push("No items are currently attached to this trip.");
+    } else if (!hasResults) {
+      status = "Ready to calculate";
+      tone = "info";
+      headline = "Your trip is ready for calculation";
+      nextStep = "Run Calculate Trip to generate fit results.";
+      alerts.push("Items and bags are ready, but results are not generated yet.");
+    } else if (resultTotals && !resultTotals.overallFits) {
+      status = "Needs fixing";
+      tone = "danger";
+      headline =
+        mainConstraint === "volume"
+          ? "Volume is the main issue"
+          : mainConstraint === "weight"
+          ? "Weight is the main issue"
+          : mainConstraint === "both"
+          ? "Volume and weight both need attention"
+          : "This packing plan needs adjustment";
+  
+      nextStep =
+        firstAdjustment ||
+        (firstRebalance
+          ? `Try moving ${firstRebalance.itemName} to ${firstRebalance.toBag?.name}.`
+          : "Review your items and bag setup.");
+    } else if (
+      resultTotals &&
+      resultTotals.overallFits &&
+      checklistCompletedCount < items.length
+    ) {
+      status = "Execution mode";
+      tone = "info";
+      headline = "Packing setup looks good";
+      nextStep = "Continue the checklist and finish packing execution.";
+    } else if (
+      resultTotals &&
+      resultTotals.overallFits &&
+      checklistCompletedCount === items.length &&
+      travelDayConfiguredCount === 0
+    ) {
+      status = "Almost ready";
+      tone = "warning";
+      headline = "Packing is nearly complete";
+      nextStep = "Mark travel-day items and accessibility essentials.";
+    } else if (
+      resultTotals &&
+      resultTotals.overallFits &&
+      checklistCompletedCount === items.length &&
+      travelDayConfiguredCount > 0
+    ) {
+      status = "Ready";
+      tone = "success";
+      headline = "This trip looks travel-ready";
+      nextStep = "Do a final review and keep essentials accessible.";
+    }
+  
+    if (resultTotals?.usedCapacityPercent >= 90 && resultTotals?.overallFits) {
+      alerts.push("Your bag usage is high. Keep a little extra space if possible.");
+    }
+  
+    if (firstRebalance) {
+      alerts.push(
+        `Rebalancing tip: move ${firstRebalance.itemName} to ${firstRebalance.toBag?.name}.`
+      );
+    }
+  
+    if (firstSubstitution) {
+      if (firstSubstitution.type === "replace") {
+        alerts.push(
+          `Substitution idea: replace ${firstSubstitution.fromItem} with ${firstSubstitution.toItem}.`
+        );
+      } else if (firstSubstitution.type === "reduce") {
+        alerts.push(
+          `Reduce ${firstSubstitution.itemName} to ${firstSubstitution.toQuantity}.`
+        );
+      } else if (firstSubstitution.type === "simplify") {
+        alerts.push(`Simplify ${firstSubstitution.fromItem}.`);
+      }
+    }
+  
+    if (hasItems && checklistCompletedCount === 0) {
+      alerts.push("Checklist has not started yet.");
+    }
+  
+    if (hasItems && travelDayConfiguredCount === 0) {
+      alerts.push("No travel-day items are marked yet.");
+    }
+  
+    return {
+      status,
+      tone,
+      headline,
+      nextStep,
+      alerts: [...new Set(alerts)].slice(0, 4),
+    };
+  }, [suitcases, items, results]);
+
   if (loading) {
     return (
       <AppScreen>
@@ -424,6 +559,33 @@ export default function TripOverviewScreen({ route, navigation }) {
                 </Text>
               </View>
             </View>
+          </AppCard>
+
+          <AppCard style={styles.sectionCard}>
+            <SectionHeader
+              title="AI Packing Copilot"
+              subtitle="A smart trip assistant that highlights what matters most right now."
+            />
+
+            <View style={styles.copilotTopRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.copilotHeadline}>{copilot.headline}</Text>
+                <Text style={styles.copilotNextStep}>{copilot.nextStep}</Text>
+              </View>
+
+              <StatusBadge label={copilot.status} tone={copilot.tone} />
+            </View>
+
+            {copilot.alerts.length > 0 ? (
+              <View style={styles.copilotAlertsWrap}>
+                {copilot.alerts.map((alert, index) => (
+                  <View key={index} style={styles.copilotAlertItem}>
+                    <Text style={styles.copilotAlertBullet}>•</Text>
+                    <Text style={styles.copilotAlertText}>{alert}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
           </AppCard>
 
           <AppCard style={styles.sectionCard}>
@@ -746,6 +908,49 @@ const styles = StyleSheet.create({
     color: colors.success,
     lineHeight: 22,
     fontWeight: "600",
+  },
+  copilotTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.md,
+  },
+  copilotHeadline: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: 8,
+  },
+  copilotNextStep: {
+    fontSize: 14,
+    color: colors.textMuted,
+    lineHeight: 22,
+  },
+  copilotAlertsWrap: {
+    marginTop: spacing.lg,
+    gap: spacing.sm,
+  },
+  copilotAlertItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  copilotAlertBullet: {
+    fontSize: 16,
+    color: colors.primary,
+    lineHeight: 20,
+  },
+  copilotAlertText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.textMuted,
+    lineHeight: 20,
   },
 
 });
