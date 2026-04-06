@@ -146,6 +146,17 @@ export default function TripBagsScreen({ route, navigation }) {
                     : "Not set"}
                 </Text>
               </View>
+              <Pressable
+                style={styles.editButton}
+                onPress={() =>
+                  navigation.navigate("EditTripBag", {
+                    tripId,
+                    bag,
+                  })
+                }
+              >
+                <Text style={styles.editButtonText}>Edit Bag</Text>
+              </Pressable>
             </View>
           ))
         )}
@@ -293,6 +304,18 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  editButton: {
+    marginTop: spacing.md,
+    backgroundColor: "#e2e8f0",
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  editButtonText: {
+    color: colors.text,
     fontSize: 14,
     fontWeight: "700",
   },

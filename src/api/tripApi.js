@@ -156,3 +156,40 @@ export const applyTemplateToTrip = async (
 
   return response.data;
 };
+
+export const updateTripBag = async (
+  tripId,
+  bagId,
+  {
+    suitcaseType,
+    name,
+    volumeCm3,
+    maxWeightKg,
+    lengthCm,
+    widthCm,
+    heightCm,
+    isCustom,
+    bagRole,
+    isPrimary,
+  }
+) => {
+  const response = await client.put(`/trips/${tripId}/suitcases/${bagId}`, {
+    suitcaseType,
+    name,
+    volumeCm3,
+    maxWeightKg,
+    lengthCm,
+    widthCm,
+    heightCm,
+    isCustom,
+    bagRole,
+    isPrimary,
+  });
+
+  return response.data;
+};
+
+export const deleteTripBag = async (tripId, bagId) => {
+  const response = await client.delete(`/trips/${tripId}/suitcases/${bagId}`);
+  return response.data;
+};
