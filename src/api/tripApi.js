@@ -138,3 +138,21 @@ export const createTripItem = async (
 
   return response.data;
 };
+
+export const getPackingTemplates = async () => {
+  const response = await client.get("/packing-templates");
+  return response.data;
+};
+
+export const applyTemplateToTrip = async (
+  tripId,
+  templateId,
+  { replaceExistingItems = false } = {}
+) => {
+  const response = await client.post(`/trips/${tripId}/apply-template`, {
+    templateId,
+    replaceExistingItems,
+  });
+
+  return response.data;
+};

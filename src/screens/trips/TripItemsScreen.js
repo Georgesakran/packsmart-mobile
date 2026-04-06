@@ -96,6 +96,7 @@ export default function TripItemsScreen({ route }) {
         <Text style={styles.subtitle}>
           Review all items linked to this trip.
         </Text>
+        
         <Pressable
           style={styles.addButton}
           onPress={() =>
@@ -105,6 +106,16 @@ export default function TripItemsScreen({ route }) {
           }
         >
           <Text style={styles.addButtonText}>+ Add Item</Text>
+        </Pressable>
+        <Pressable
+          style={styles.secondaryTopButton}
+          onPress={() =>
+            navigation.navigate("ApplyTemplate", {
+              tripId,
+            })
+          }
+        >
+          <Text style={styles.secondaryTopButtonText}>Apply Template</Text>
         </Pressable>
 
         <View style={styles.summaryCard}>
@@ -333,6 +344,19 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  secondaryTopButton: {
+    backgroundColor: "#e2e8f0",
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignSelf: "flex-start",
+    marginBottom: spacing.lg,
+  },
+  secondaryTopButtonText: {
+    color: colors.text,
     fontSize: 14,
     fontWeight: "700",
   },
