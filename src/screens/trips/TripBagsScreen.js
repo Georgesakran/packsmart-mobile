@@ -1,6 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 import AppScreen from "../../components/common/AppScreen";
+import AppCard from "../../components/common/AppCard";
+import AppButton from "../../components/common/AppButton";
+import StatusBadge from "../../components/common/StatusBadge";
+import SectionHeader from "../../components/common/SectionHeader";
+import EmptyState from "../../components/common/EmptyState";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { getTripById, getTripSuitcases } from "../../api/tripApi";
@@ -34,10 +39,14 @@ export default function TripBagsScreen({ route, navigation }) {
   }, [tripId]);
 
   useEffect(() => {
+    loadBags();
+  }, [loadBags]);
+
+  useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
       loadBags();
     });
-  
+
     return unsubscribe;
   }, [navigation, loadBags]);
 
@@ -52,123 +61,143 @@ export default function TripBagsScreen({ route, navigation }) {
     );
   }
 
-  if (error) {
-    return (
-      <AppScreen>
-        <View style={styles.centerBlock}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      </AppScreen>
-    );
-  }
-
   return (
     <AppScreen>
-      <View style={styles.container}>
-        <Text style={styles.kicker}>Trip / Bags</Text>
-        <Text style={styles.title}>{trip?.trip_name || "Trip Bags"}</Text>
-        <Text style={styles.subtitle}>
-          Review all bags linked to this trip.
-        </Text>
-        <Pressable
-          style={styles.addButton}
-          onPress={() =>
-            navigation.navigate("AddTripBag", {
-              tripId,
-            })
-          }
-        >
-          <Text style={styles.addButtonText}>+ Add Bag</Text>
-        </Pressable>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.container}>
+          <Text style={styles.kicker}>Trip / Bags</Text>
+          <Text style={styles.title}>{trip?.trip_name || "Trip Bags"}</Text>
+          <Text style={styles.subtitle}>
+            Review, add, and manage all bags linked to this trip.
+          </Text>
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>Total Bags</Text>
-          <Text style={styles.summaryValue}>{bags.length}</Text>
-        </View>
+          <View style={styles.topActionsRow}>
+            <AppButton
+              title="Add Bag"
+              onPress={() =>
+                navigation.navigate("AddTripBag", {
+                  tripId,
+                })
+              }
+              style={styles.flexButton}
+            />
 
-        {bags.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>No bags added yet</Text>
-            <Text style={styles.emptyText}>
-              This trip does not have any bags assigned yet.
-            </Text>
+            <AppButton
+              title="Refresh"
+              onPress={loadBags}
+              variant="secondary"
+              style={styles.flexButton}
+            />
           </View>
-        ) : (
-          bags.map((bag) => (
-            <View key={bag.id} style={styles.bagCard}>
-              <View style={styles.bagTopRow}>
-                <Text style={styles.bagName}>{bag.name}</Text>
-                <View
-                  style={[
-                    styles.badge,
-                    bag.is_primary ? styles.primaryBadge : styles.roleBadge,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.badgeText,
-                      bag.is_primary
-                        ? styles.primaryBadgeText
-                        : styles.roleBadgeText,
-                    ]}
-                  >
-                    {bag.is_primary ? "Primary" : bag.bag_role || "Bag"}
-                  </Text>
-                </View>
+
+          {error ? (
+            <AppCard style={styles.errorCard}>
+              <Text style={styles.errorText}>{error}</Text>
+            </AppCard>
+          ) : null}
+
+          <AppCard>
+            <SectionHeader
+              title="Bag Summary"
+              subtitle="A quick view of the current bag setup for this trip."
+            />
+
+            <View style={styles.summaryGrid}>
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Total Bags</Text>
+                <Text style={styles.summaryMiniValue}>{bags.length}</Text>
               </View>
 
-              <View style={styles.metaRow}>
-                <Text style={styles.metaText}>
-                  <Text style={styles.metaLabel}>Role: </Text>
-                  {bag.bag_role || "main"}
+              <View style={styles.summaryMiniCard}>
+                <Text style={styles.summaryMiniLabel}>Primary</Text>
+                <Text style={styles.summaryMiniValue}>
+                  {bags.find((bag) => bag.is_primary || bag.isPrimary) ? "Set" : "None"}
                 </Text>
               </View>
-
-              <View style={styles.metaRow}>
-                <Text style={styles.metaText}>
-                  <Text style={styles.metaLabel}>Volume: </Text>
-                  {bag.volume_cm3 || bag.volumeCm3 || 0} cm³
-                </Text>
-              </View>
-
-              <View style={styles.metaRow}>
-                <Text style={styles.metaText}>
-                  <Text style={styles.metaLabel}>Max Weight: </Text>
-                  {bag.max_weight_kg || bag.maxWeightKg || 0} kg
-                </Text>
-              </View>
-
-              <View style={styles.metaRow}>
-                <Text style={styles.metaText}>
-                  <Text style={styles.metaLabel}>Dimensions: </Text>
-                  {bag.length_cm && bag.width_cm && bag.height_cm
-                    ? `${bag.length_cm} × ${bag.width_cm} × ${bag.height_cm} cm`
-                    : "Not set"}
-                </Text>
-              </View>
-              <Pressable
-                style={styles.editButton}
-                onPress={() =>
-                  navigation.navigate("EditTripBag", {
-                    tripId,
-                    bag,
-                  })
-                }
-              >
-                <Text style={styles.editButtonText}>Edit Bag</Text>
-              </Pressable>
             </View>
-          ))
-        )}
-      </View>
+          </AppCard>
+
+          {bags.length === 0 ? (
+            <EmptyState
+              title="No bags added yet"
+              description="This trip does not have any bags assigned yet."
+            />
+          ) : (
+            bags.map((bag) => {
+              const isPrimary = !!bag.is_primary || !!bag.isPrimary;
+              const volume = bag.volume_cm3 || bag.volumeCm3 || 0;
+              const maxWeight = bag.max_weight_kg || bag.maxWeightKg || 0;
+              const dimensions =
+                bag.length_cm && bag.width_cm && bag.height_cm
+                  ? `${bag.length_cm} × ${bag.width_cm} × ${bag.height_cm} cm`
+                  : "Not set";
+
+              return (
+                <AppCard key={bag.id} style={styles.bagCard}>
+                  <View style={styles.bagTopRow}>
+                    <View style={styles.bagNameWrap}>
+                      <Text style={styles.bagName}>{bag.name}</Text>
+                      <Text style={styles.bagRoleText}>
+                        Role: {bag.bag_role || bag.bagRole || "main"}
+                      </Text>
+                    </View>
+
+                    {isPrimary ? (
+                      <StatusBadge label="Primary" tone="info" />
+                    ) : (
+                      <StatusBadge
+                        label={bag.bag_role || bag.bagRole || "Bag"}
+                        tone="neutral"
+                      />
+                    )}
+                  </View>
+
+                  <View style={styles.metaGroup}>
+                    <Text style={styles.metaText}>
+                      <Text style={styles.metaLabel}>Volume: </Text>
+                      {volume} cm³
+                    </Text>
+
+                    <Text style={styles.metaText}>
+                      <Text style={styles.metaLabel}>Max Weight: </Text>
+                      {maxWeight} kg
+                    </Text>
+
+                    <Text style={styles.metaText}>
+                      <Text style={styles.metaLabel}>Dimensions: </Text>
+                      {dimensions}
+                    </Text>
+                  </View>
+
+                  <AppButton
+                    title="Edit Bag"
+                    variant="secondary"
+                    onPress={() =>
+                      navigation.navigate("EditTripBag", {
+                        tripId,
+                        bag,
+                      })
+                    }
+                    style={styles.editButton}
+                  />
+                </AppCard>
+              );
+            })
+          )}
+        </View>
+      </ScrollView>
     </AppScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: spacing.xl,
+  },
   container: {
     flex: 1,
     padding: spacing.xl,
+    gap: spacing.lg,
   },
   centerBlock: {
     flex: 1,
@@ -181,73 +210,63 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 15,
   },
-  errorText: {
-    color: colors.danger,
-    fontSize: 15,
-    textAlign: "center",
-  },
   kicker: {
     fontSize: 13,
     fontWeight: "700",
     color: colors.secondary,
-    marginBottom: spacing.sm,
     textTransform: "uppercase",
   },
   title: {
     fontSize: 30,
     fontWeight: "800",
     color: colors.text,
-    marginBottom: spacing.xs,
+    marginTop: 4,
   },
   subtitle: {
     fontSize: 15,
     color: colors.textMuted,
-    marginBottom: spacing.xl,
+    marginTop: 4,
   },
-  summaryCard: {
-    backgroundColor: colors.surface,
+  topActionsRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  flexButton: {
+    flex: 1,
+  },
+  errorCard: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: 14,
+  },
+  summaryGrid: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    flexWrap: "wrap",
+  },
+  summaryMiniCard: {
+    flex: 1,
+    minWidth: "47%",
+    backgroundColor: "#f8fafc",
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    borderRadius: 14,
+    padding: spacing.md,
   },
-  summaryLabel: {
-    fontSize: 13,
+  summaryMiniLabel: {
+    fontSize: 12,
     color: colors.textMuted,
     marginBottom: 6,
   },
-  summaryValue: {
-    fontSize: 24,
+  summaryMiniValue: {
+    fontSize: 18,
     fontWeight: "800",
     color: colors.text,
   },
-  emptyCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  emptyText: {
-    fontSize: 15,
-    color: colors.textMuted,
-    lineHeight: 22,
-  },
-  bagCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
+  bagCard: {},
   bagTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -255,36 +274,21 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginBottom: spacing.md,
   },
-  bagName: {
+  bagNameWrap: {
     flex: 1,
+  },
+  bagName: {
     fontSize: 18,
     fontWeight: "700",
     color: colors.text,
+    marginBottom: 6,
   },
-  badge: {
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+  bagRoleText: {
+    fontSize: 13,
+    color: colors.textMuted,
   },
-  primaryBadge: {
-    backgroundColor: "#dbeafe",
-  },
-  roleBadge: {
-    backgroundColor: "#e5e7eb",
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  primaryBadgeText: {
-    color: "#1d4ed8",
-  },
-  roleBadgeText: {
-    color: "#374151",
-    textTransform: "capitalize",
-  },
-  metaRow: {
-    marginBottom: 8,
+  metaGroup: {
+    gap: 8,
   },
   metaText: {
     fontSize: 14,
@@ -294,29 +298,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: "700",
   },
-  addButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignSelf: "flex-start",
-    marginBottom: spacing.lg,
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "700",
-  },
   editButton: {
-    marginTop: spacing.md,
-    backgroundColor: "#e2e8f0",
-    borderRadius: 12,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  editButtonText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "700",
+    marginTop: spacing.lg,
   },
 });
