@@ -2,7 +2,6 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -32,25 +31,28 @@ export async function registerForPushNotificationsAsync() {
     return null;
   }
 
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "default",
+      importance: Notifications.AndroidImportance.DEFAULT,
+    });
+  }
+
   try {
     const projectId =
-      Constants?.expoConfig?.extra?.eas?.projectId ||
+      Constants?.expoConfig?.extra?.eas?.projectId ??
       Constants?.easConfig?.projectId;
 
-    const tokenResponse = await Notifications.getExpoPushTokenAsync(
-      projectId ? { projectId } : undefined
-    );
-
-    const token = tokenResponse?.data || null;
-
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "default",
-        importance: Notifications.AndroidImportance.DEFAULT,
-      });
+    if (!projectId) {
+      console.log("Expo projectId not found yet. Skipping push token for now.");
+      return null;
     }
 
-    return token;
+    const tokenResponse = await Notifications.getExpoPushTokenAsync({
+      projectId,
+    });
+
+    return tokenResponse?.data || null;
   } catch (error) {
     console.error("Get Expo push token error:", error);
     return null;
