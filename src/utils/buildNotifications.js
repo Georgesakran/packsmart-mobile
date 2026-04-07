@@ -1,6 +1,15 @@
-export function buildNotificationsFromTrips(trips = []) {
+export function buildNotificationsFromTrips(trips = [], preferences = {}) {
   const notifications = [];
   const now = new Date();
+  const {
+    enabled = true,
+    checklistReminders = true,
+    travelDayReminders = true,
+    scheduleReminders = true,
+    readyReminders = true,
+  } = preferences;
+  
+  if (!enabled) return [];
 
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -86,8 +95,8 @@ export function buildNotificationsFromTrips(trips = []) {
       });
     }
 
-    if (hasResults && overallFits === true && !checklistStarted) {
-      notifications.push({
+    if (checklistReminders && hasResults && overallFits === true && !checklistStarted) {
+        notifications.push({
         id: `trip-${tripId}-checklist`,
         tripId,
         type: "progress",
@@ -98,33 +107,44 @@ export function buildNotificationsFromTrips(trips = []) {
       });
     }
 
-    if (hasResults && overallFits === true && checklistStarted && !travelDayConfigured) {
-      notifications.push({
-        id: `trip-${tripId}-travelday`,
-        tripId,
-        type: "travel-day",
-        tone: "info",
-        title: "Set travel-day items",
-        message: `${tripName} is almost ready. Mark what to wear or keep accessible.`,
-        priority: 60,
-      });
-    }
+    if (
+      travelDayReminders &&
+      hasResults &&
+      overallFits === true &&
+      checklistStarted &&
+      !travelDayConfigured) {
+        notifications.push({
+          id: `trip-${tripId}-travelday`,
+          tripId,
+          type: "travel-day",
+          tone: "info",
+          title: "Set travel-day items",
+          message: `${tripName} is almost ready. Mark what to wear or keep accessible.`,
+          priority: 60,
+        });
+      } 
 
-    if (hasResults && overallFits === true && checklistStarted && travelDayConfigured) {
-      notifications.push({
-        id: `trip-${tripId}-ready`,
-        tripId,
-        type: "ready",
-        tone: "success",
-        title: "Trip looks ready",
-        message: `${tripName} is in a strong state for travel.`,
-        priority: 20,
-      });
-    }
+      if (
+        readyReminders &&
+        hasResults &&
+        overallFits === true &&
+        checklistStarted &&
+        travelDayConfigured
+        ) {
+            notifications.push({
+            id: `trip-${tripId}-ready`,
+            tripId,
+            type: "ready",
+            tone: "success",
+            title: "Trip looks ready",
+            message: `${tripName} is in a strong state for travel.`,
+            priority: 20,
+            });
+          }
 
     // Time-aware reminders (v1)
-    if (daysUntilTrip !== null && daysUntilTrip >= 0) {
-      if (daysUntilTrip >= 7) {
+    if (scheduleReminders && daysUntilTrip !== null && daysUntilTrip >= 0) {
+        if (daysUntilTrip >= 7) {
         notifications.push({
           id: `trip-${tripId}-schedule-plan`,
           tripId,

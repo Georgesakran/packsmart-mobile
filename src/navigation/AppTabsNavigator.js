@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/home/HomeScreen";
 import TemplatesScreen from "../screens/templates/TemplatesScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
-import NotificationsScreen from "../screens/notifications/NotificationsScreen";
+import NotificationsStackNavigator from "./NotificationsStackNavigator";
 import TripsStackNavigator from "./TripsStackNavigator";
 import { useNotifications } from "../context/NotificationsContext";
 
@@ -18,8 +18,9 @@ export default function AppTabsNavigator() {
       <Tab.Screen name="Trips" component={TripsStackNavigator} />
       <Tab.Screen
         name="Notifications"
-        component={NotificationsScreen}
+        component={NotificationsStackNavigator}
         options={{
+          headerShown: false,
           tabBarBadge: notificationCount > 0 ? notificationCount : undefined,
         }}
       />

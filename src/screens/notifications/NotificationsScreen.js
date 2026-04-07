@@ -5,6 +5,8 @@ import AppCard from "../../components/common/AppCard";
 import EmptyState from "../../components/common/EmptyState";
 import SectionHeader from "../../components/common/SectionHeader";
 import StatusBadge from "../../components/common/StatusBadge";
+import AppButton from "../../components/common/AppButton";
+
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { useNotifications } from "../../context/NotificationsContext";
@@ -41,6 +43,18 @@ export default function NotificationsScreen({ navigation }) {
           <Text style={styles.subtitle}>
             Smart reminders generated from your current trip states.
           </Text>
+          <AppCard>
+            <SectionHeader
+              title="Controls"
+              subtitle="Manage how your trip reminders behave."
+            />
+
+            <AppButton
+              title="Open Notification Preferences"
+              variant="secondary"
+              onPress={() => navigation.navigate("NotificationPreferences")}
+            />
+          </AppCard>
 
           <AppCard>
             <SectionHeader
