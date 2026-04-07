@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   ActivityIndicator,
   ScrollView,
@@ -77,6 +78,18 @@ export default function TripOverviewScreen({ route, navigation }) {
   useEffect(() => {
     loadTripOverview();
   }, [loadTripOverview]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadTripOverview();
+    }, [loadTripOverview])
+  );
+  // Another Option for lines 78 - 86
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     loadTripOverview();
+  //   }, [loadTripOverview])
+  // );
 
   const handleGenerateSuggestions = async () => {
     try {
