@@ -149,10 +149,10 @@ export const applyTemplateToTrip = async (
   templateId,
   { replaceExistingItems = false } = {}
 ) => {
-  const response = await client.post(`/trips/${tripId}/apply-template`, {
-    templateId,
-    replaceExistingItems,
-  });
+  const response = await client.post(
+    `/packing-templates/apply/${templateId}/trips/${tripId}`,
+    { replaceExistingItems }
+  );
 
   return response.data;
 };
