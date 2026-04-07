@@ -5,6 +5,7 @@ import AppTabsNavigator from "./AppTabsNavigator";
 import AuthNavigator from "./AuthNavigator";
 import useAuth from "../hooks/useAuth";
 import colors from "../theme/colors";
+import { navigationRef } from "./navigationRef";
 
 export default function RootNavigator() {
   const { isAuthenticated, authLoading } = useAuth();
@@ -25,7 +26,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       {isAuthenticated ? <AppTabsNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );
