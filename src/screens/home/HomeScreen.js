@@ -8,7 +8,12 @@ import SectionHeader from "../../components/common/SectionHeader";
 import EmptyState from "../../components/common/EmptyState";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
-import { getTrips } from "../../api/tripApi";
+import {
+  getTrips,
+  getTripItems,
+  getTripResults,
+  getTripSuitcases,
+} from "../../api/tripApi";
 import { useNotifications } from "../../context/NotificationsContext";
 import { buildHomeInsights } from "../../utils/buildHomeInsights";
 
@@ -23,9 +28,54 @@ export default function HomeScreen({ navigation }) {
     try {
       setLoading(true);
       setError("");
-
+  
       const tripsData = await getTrips();
-      setTrips(Array.isArray(tripsData) ? tripsData : []);
+      const tripsArray = Array.isArray(tripsData) ? tripsData : [];
+  
+      const enrichedTrips = await Promise.all(
+        tripsArray.map(async (trip) => {
+          const [bagsRes, itemsRes, resultsRes] = await Promise.allSettled([
+            getTripSuitcases(trip.id),
+            getTripItems(trip.id),
+            getTripResults(trip.id),
+          ]);
+  
+          const bags =
+            bagsRes.status === "fulfilled" && Array.isArray(bagsRes.value)
+              ? bagsRes.value
+              : [];
+  
+          const items =
+            itemsRes.status === "fulfilled" && Array.isArray(itemsRes.value)
+              ? itemsRes.value
+              : [];
+  
+          const results =
+            resultsRes.status === "fulfilled" ? resultsRes.value : null;
+  
+          const checklistStarted = items.some((item) => {
+            const status = item.packingStatus || item.packing_status || "pending";
+            return status !== "pending";
+          });
+  
+          const travelDayConfigured = items.some((item) => {
+            const mode = item.travelDayMode || item.travel_day_mode || "normal";
+            return mode !== "normal";
+          });
+  
+          return {
+            ...trip,
+            bagsCount: bags.length,
+            itemsCount: items.length,
+            hasResults: !!results?.totals,
+            overallFits: results?.totals?.overallFits ?? false,
+            checklistStarted,
+            travelDayConfigured,
+          };
+        })
+      );
+  
+      setTrips(enrichedTrips);
       await refreshNotifications();
     } catch (err) {
       console.error("Load home data error:", err);

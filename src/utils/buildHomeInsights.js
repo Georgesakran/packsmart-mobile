@@ -16,8 +16,8 @@ export function buildHomeInsights(trips = [], notifications = []) {
       if (bagsCount > 0) score += 25;
       if (itemsCount > 0) score += 20;
       if (hasResults) score += 20;
-      if (checklistStarted) score += 20;
-      if (travelDayConfigured) score += 15;
+      if (itemsCount > 0 && checklistStarted) score += 20;
+      if (itemsCount > 0 && travelDayConfigured) score += 15;
   
       let nextAction = "Open trip";
       if (bagsCount === 0) nextAction = "Add a bag";
