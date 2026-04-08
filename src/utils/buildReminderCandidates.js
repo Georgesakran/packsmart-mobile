@@ -1,7 +1,13 @@
-export function buildReminderCandidates(trips = []) {
+import { isNowInsideQuietHours, shouldIncludeReminderByMode } from "./reminderTiming";
+
+export function buildReminderCandidates(trips = [], preferences = {}) {
     const reminders = [];
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (!preferences?.enabled) return [];
+
+    const inQuietHours = isNowInsideQuietHours(preferences);
   
     const getDaysUntilTrip = (startDateValue) => {
       if (!startDateValue) return null;
@@ -86,5 +92,24 @@ export function buildReminderCandidates(trips = []) {
       }
     });
   
-    return reminders;
+    return reminders.filter((item) => {
+      if (inQuietHours) {
+        return false;
+      }
+    
+      return shouldIncludeReminderByMode(
+        {
+          ...item,
+          tone:
+            item.id.includes("today") || item.id.includes("tomorrow")
+              ? "danger"
+              : "info",
+          type:
+            item.id.includes("today") || item.id.includes("tomorrow")
+              ? "urgent"
+              : "schedule",
+        },
+        preferences
+      );
+    });
   }

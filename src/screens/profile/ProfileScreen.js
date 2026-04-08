@@ -10,9 +10,10 @@ import useAuth from "../../hooks/useAuth";
 import { usePushNotifications } from "../../context/PushNotificationsContext";
 import { useNotifications } from "../../context/NotificationsContext";
 import { buildReminderCandidates } from "../../utils/buildReminderCandidates";
+import { useNotificationPreferences } from "../../context/NotificationPreferencesContext";
 
 export default function ProfileScreen() {
-
+  const { preferences } = useNotificationPreferences();
   const { logout } = useAuth();
   const {
     expoPushToken,
@@ -76,7 +77,7 @@ export default function ProfileScreen() {
               title="Schedule Smart Trip Reminders"
               variant="secondary"
               onPress={async () => {
-                const reminders = buildReminderCandidates(trips);
+                const reminders = buildReminderCandidates(trips, preferences);
                 await scheduleMultipleLocalReminders(reminders);
               }}
             />

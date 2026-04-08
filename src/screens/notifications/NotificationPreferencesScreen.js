@@ -1,5 +1,12 @@
 import React from "react";
-import { ActivityIndicator, StyleSheet, Switch, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import AppScreen from "../../components/common/AppScreen";
 import AppCard from "../../components/common/AppCard";
 import AppButton from "../../components/common/AppButton";
@@ -20,6 +27,11 @@ export default function NotificationPreferencesScreen() {
   const { refreshNotifications } = useNotifications();
 
   const handleToggle = async (key, value) => {
+    await updatePreferences({ [key]: value });
+    await refreshNotifications();
+  };
+
+  const handleTextUpdate = async (key, value) => {
     await updatePreferences({ [key]: value });
     await refreshNotifications();
   };
@@ -46,7 +58,7 @@ export default function NotificationPreferencesScreen() {
         <Text style={styles.kicker}>Notifications / Preferences</Text>
         <Text style={styles.title}>Notification Preferences</Text>
         <Text style={styles.subtitle}>
-          Control which reminders and trip alerts you want to receive.
+          Control reminders, quiet mode, and timing behavior.
         </Text>
 
         <AppCard>
@@ -128,6 +140,75 @@ export default function NotificationPreferencesScreen() {
           </View>
         </AppCard>
 
+        <AppCard>
+          <SectionHeader
+            title="Quiet Mode"
+            subtitle="Reduce non-urgent reminders during selected hours."
+          />
+
+          <View style={styles.row}>
+            <View style={styles.rowTextWrap}>
+              <Text style={styles.rowTitle}>Enable Quiet Mode</Text>
+              <Text style={styles.rowSubtitle}>
+                Hide most reminders during quiet hours.
+              </Text>
+            </View>
+            <Switch
+              value={preferences.quietModeEnabled}
+              onValueChange={(value) => handleToggle("quietModeEnabled", value)}
+            />
+          </View>
+
+          <Text style={styles.label}>Quiet Hours Start</Text>
+          <TextInput
+            value={preferences.quietHoursStart}
+            onChangeText={(value) => handleTextUpdate("quietHoursStart", value)}
+            style={styles.input}
+            placeholder="22:00"
+          />
+
+          <Text style={styles.label}>Quiet Hours End</Text>
+          <TextInput
+            value={preferences.quietHoursEnd}
+            onChangeText={(value) => handleTextUpdate("quietHoursEnd", value)}
+            style={styles.input}
+            placeholder="08:00"
+          />
+        </AppCard>
+
+        <AppCard>
+          <SectionHeader
+            title="Reminder Intensity"
+            subtitle="Choose how selective reminders should be."
+          />
+
+          <View style={styles.modeButtons}>
+            <AppButton
+              title="Minimal"
+              variant={
+                preferences.reminderMode === "minimal" ? "primary" : "secondary"
+              }
+              onPress={() => handleTextUpdate("reminderMode", "minimal")}
+            />
+            <AppButton
+              title="Normal"
+              variant={
+                preferences.reminderMode === "normal" ? "primary" : "secondary"
+              }
+              onPress={() => handleTextUpdate("reminderMode", "normal")}
+            />
+            <AppButton
+              title="Important Only"
+              variant={
+                preferences.reminderMode === "important_only"
+                  ? "primary"
+                  : "secondary"
+              }
+              onPress={() => handleTextUpdate("reminderMode", "important_only")}
+            />
+          </View>
+        </AppCard>
+
         <AppButton
           title="Reset to Default"
           variant="secondary"
@@ -194,5 +275,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     lineHeight: 19,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.text,
+    marginTop: spacing.md,
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: colors.text,
+    backgroundColor: "#fff",
+  },
+  modeButtons: {
+    gap: spacing.sm,
   },
 });

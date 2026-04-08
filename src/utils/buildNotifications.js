@@ -1,6 +1,9 @@
+import { isNowInsideQuietHours, shouldIncludeReminderByMode } from "./reminderTiming";
+
 export function buildNotificationsFromTrips(trips = [], preferences = {}) {
   const notifications = [];
   const now = new Date();
+  const inQuietHours = isNowInsideQuietHours(preferences);
   const {
     enabled = true,
     checklistReminders = true,
@@ -194,7 +197,15 @@ export function buildNotificationsFromTrips(trips = [], preferences = {}) {
     }
   });
 
-  return notifications.sort((a, b) => {
+  const filtered = notifications.filter((item) => {
+    if (inQuietHours && item.type !== "urgent" && item.tone !== "danger") {
+      return false;
+    }
+  
+    return shouldIncludeReminderByMode(item, preferences);
+  });
+  
+  return filtered.sort((a, b) => {
     if (b.priority !== a.priority) return b.priority - a.priority;
     return a.title.localeCompare(b.title);
   });

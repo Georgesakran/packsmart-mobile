@@ -8,6 +8,12 @@ export const defaultNotificationPreferences = {
   travelDayReminders: true,
   scheduleReminders: true,
   readyReminders: true,
+
+  quietModeEnabled: false,
+  quietHoursStart: "22:00",
+  quietHoursEnd: "08:00",
+
+  reminderMode: "normal", // minimal | normal | important_only
 };
 
 export async function loadNotificationPreferences() {
