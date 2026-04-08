@@ -107,8 +107,20 @@ export default function ApplyTemplateToTripScreen({ route, navigation }) {
           <Text style={styles.kicker}>Templates / Apply</Text>
           <Text style={styles.title}>Apply Template to Trip</Text>
           <Text style={styles.subtitle}>
-            Choose a trip and apply this template: {templateName || "Template"}
+            Choose a trip and apply this template quickly.
           </Text>
+
+          <AppCard>
+            <SectionHeader
+              title="Selected Template"
+              subtitle="This is the template you are about to apply."
+            />
+
+            <Text style={styles.finalText}>
+              <Text style={styles.finalLabel}>Template: </Text>
+              {templateName || "Unnamed Template"}
+            </Text>
+          </AppCard>
 
           {actionMessage ? (
             <AppCard style={styles.successCard}>

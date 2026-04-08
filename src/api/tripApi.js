@@ -252,3 +252,18 @@ export const saveTripAsTemplate = async (tripId, payload) => {
   const response = await client.post(`/packing-templates/from-trip/${tripId}`, payload);
   return response.data;
 };
+
+export const duplicateTrip = async (tripId) => {
+  const response = await client.post(`/trips/${tripId}/duplicate`);
+  return response.data;
+};
+
+export const archiveTrip = async (tripId) => {
+  const response = await client.put(`/trips/${tripId}/archive`);
+  return response.data;
+};
+
+export const unarchiveTrip = async (tripId) => {
+  const response = await client.put(`/trips/${tripId}/unarchive`);
+  return response.data;
+};

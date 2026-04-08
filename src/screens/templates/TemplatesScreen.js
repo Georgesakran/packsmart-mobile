@@ -272,6 +272,10 @@ export default function TemplatesScreen({ navigation }) {
                     <View style={styles.templateTextWrap}>
                       <Text style={styles.templateTitle}>{template.name}</Text>
                       <Text style={styles.templateSubtitle}>{template.notes}</Text>
+                      <Text style={styles.metaText}>
+                        <Text style={styles.metaLabel}>Shortcut: </Text>
+                        Apply this template directly to any trip
+                      </Text>
                     </View>
 
                     <StatusBadge
@@ -295,6 +299,16 @@ export default function TemplatesScreen({ navigation }) {
                   </View>
 
                   <View style={styles.actionColumn}>
+                    <AppButton
+                      title="Quick Apply"
+                      onPress={() =>
+                        navigation.navigate("ApplyTemplateToTrip", {
+                          templateId: template.id,
+                          templateName: template.name,
+                        })
+                      }
+                    />
+
                     <AppButton
                       title="Open Details"
                       variant="secondary"

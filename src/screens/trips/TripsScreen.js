@@ -17,7 +17,9 @@ import EmptyState from "../../components/common/EmptyState";
 
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
-import { getTrips } from "../../api/tripApi";
+import { archiveTrip, duplicateTrip, unarchiveTrip, getTrips } from "../../api/tripApi";
+
+import { useNotifications } from "../../context/NotificationsContext";
 
 function normalizeTrip(trip) {
   const bagsCount = Number(trip.bagsCount || trip.bags_count || 0);
@@ -73,6 +75,9 @@ export default function TripsScreen({ navigation }) {
   const [sortBy, setSortBy] = useState("newest");
   const [filterBy, setFilterBy] = useState("all");
 
+  const { refreshNotifications } = useNotifications();
+  const [actionMessage, setActionMessage] = useState("");
+
   const loadTrips = useCallback(async () => {
     try {
       setLoading(true);
@@ -117,6 +122,9 @@ export default function TripsScreen({ navigation }) {
     } else if (filterBy === "no_results") {
       result = result.filter((trip) => !trip.hasResults);
     }
+    if (filterBy === "all") {
+      result = result.filter((trip) => (trip.status || "").toLowerCase() !== "archived");
+    }
 
     result.sort((a, b) => {
       if (sortBy === "newest") {
@@ -136,6 +144,54 @@ export default function TripsScreen({ navigation }) {
 
     return result;
   }, [trips, searchTerm, sortBy, filterBy]);
+
+  const handleDuplicateTrip = async (tripId) => {
+    try {
+      setError("");
+      setActionMessage("");
+  
+      const data = await duplicateTrip(tripId);
+      setActionMessage(data?.message || "Trip duplicated successfully.");
+  
+      await loadTrips();
+      await refreshNotifications();
+    } catch (err) {
+      console.error("Duplicate trip error:", err);
+      setError(err?.response?.data?.message || "Failed to duplicate trip.");
+    }
+  };
+  
+  const handleArchiveTrip = async (tripId) => {
+    try {
+      setError("");
+      setActionMessage("");
+  
+      const data = await archiveTrip(tripId);
+      setActionMessage(data?.message || "Trip archived successfully.");
+  
+      await loadTrips();
+      await refreshNotifications();
+    } catch (err) {
+      console.error("Archive trip error:", err);
+      setError(err?.response?.data?.message || "Failed to archive trip.");
+    }
+  };
+  
+  const handleRestoreTrip = async (tripId) => {
+    try {
+      setError("");
+      setActionMessage("");
+  
+      const data = await unarchiveTrip(tripId);
+      setActionMessage(data?.message || "Trip restored successfully.");
+  
+      await loadTrips();
+      await refreshNotifications();
+    } catch (err) {
+      console.error("Restore trip error:", err);
+      setError(err?.response?.data?.message || "Failed to restore trip.");
+    }
+  };
 
   if (loading) {
     return (
@@ -157,6 +213,11 @@ export default function TripsScreen({ navigation }) {
           <Text style={styles.subtitle}>
             Search, sort, and filter your trips from one place.
           </Text>
+          {actionMessage ? (
+              <AppCard style={styles.successCard}>
+                <Text style={styles.successText}>{actionMessage}</Text>
+              </AppCard>
+            ) : null}
 
           <View style={styles.topActionsRow}>
             <AppButton
@@ -222,6 +283,12 @@ export default function TripsScreen({ navigation }) {
                 title="Readiness"
                 variant={sortBy === "readiness_desc" ? "primary" : "secondary"}
                 onPress={() => setSortBy("readiness_desc")}
+                style={styles.filterButton}
+              />
+              <AppButton
+                title="Archived"
+                variant={filterBy === "archived" ? "primary" : "secondary"}
+                onPress={() => setFilterBy("archived")}
                 style={styles.filterButton}
               />
             </View>
@@ -320,6 +387,26 @@ export default function TripsScreen({ navigation }) {
                         })
                       }
                     />
+
+                    <AppButton
+                      title="Duplicate"
+                      variant="secondary"
+                      onPress={() => handleDuplicateTrip(trip.id)}
+                    />
+
+                    {trip.status === "archived" ? (
+                      <AppButton
+                        title="Restore"
+                        variant="secondary"
+                        onPress={() => handleRestoreTrip(trip.id)}
+                      />
+                    ) : (
+                      <AppButton
+                        title="Archive"
+                        variant="secondary"
+                        onPress={() => handleArchiveTrip(trip.id)}
+                      />
+                    )}
                   </View>
                 </AppCard>
               ))
@@ -438,5 +525,14 @@ const styles = StyleSheet.create({
   },
   actionColumn: {
     gap: spacing.sm,
+  },
+  successCard: {
+    backgroundColor: "#f0fdf4",
+    borderColor: "#bbf7d0",
+  },
+  successText: {
+    color: "#166534",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
