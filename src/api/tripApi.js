@@ -227,3 +227,23 @@ export const deleteTripItem = async (tripId, itemId) => {
   const response = await client.delete(`/trips/${tripId}/items/${itemId}`);
   return response.data;
 };
+
+export const getPackingTemplateById = async (templateId) => {
+  const response = await client.get(`/packing-templates/${templateId}`);
+  return response.data;
+};
+
+export const createPackingTemplate = async (payload) => {
+  const response = await client.post("/packing-templates", payload);
+  return response.data;
+};
+
+export const updatePackingTemplate = async (templateId, payload) => {
+  const response = await client.put(`/packing-templates/${templateId}`, payload);
+  return response.data;
+};
+
+export const deletePackingTemplate = async (templateId) => {
+  const response = await client.delete(`/packing-templates/${templateId}`);
+  return response.data;
+};

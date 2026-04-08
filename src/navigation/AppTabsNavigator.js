@@ -1,12 +1,11 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/home/HomeScreen";
-import TemplatesScreen from "../screens/templates/TemplatesScreen";
 import ProfileScreen from "../screens/profile/ProfileScreen";
 import NotificationsStackNavigator from "./NotificationsStackNavigator";
 import TripsStackNavigator from "./TripsStackNavigator";
 import { useNotifications } from "../context/NotificationsContext";
-
+import TemplatesStackNavigator from "./TemplatesStackNavigator";
 const Tab = createBottomTabNavigator();
 
 export default function AppTabsNavigator() {
@@ -24,7 +23,11 @@ export default function AppTabsNavigator() {
           tabBarBadge: notificationCount > 0 ? notificationCount : undefined,
         }}
       />
-      <Tab.Screen name="Templates" component={TemplatesScreen} />
+      <Tab.Screen
+        name="Templates"
+        component={TemplatesStackNavigator}
+        options={{ headerShown: false }}
+      />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
