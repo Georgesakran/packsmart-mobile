@@ -1,6 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import TripsListScreen from "../screens/trips/TripsListScreen";
+import TripsScreen from "../screens/trips/TripsScreen";
 import TripOverviewScreen from "../screens/trips/TripOverviewScreen";
 import TripBagsScreen from "../screens/trips/TripBagsScreen";
 import TripItemsScreen from "../screens/trips/TripItemsScreen";
@@ -13,6 +13,7 @@ import AddTripItemScreen from "../screens/trips/AddTripItemScreen";
 import ApplyTemplateScreen from "../screens/trips/ApplyTemplateScreen";
 import EditTripBagScreen from "../screens/trips/EditTripBagScreen";
 import EditTripItemScreen from "../screens/trips/EditTripItemScreen";
+import SaveTripAsTemplateScreen from "../screens/templates/SaveTripAsTemplateScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -20,8 +21,8 @@ export default function TripsStackNavigator() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="TripsList"
-        component={TripsListScreen}
+        name="TripsScreen"
+        component={TripsScreen}
         options={{ title: "Trips" }}
       />
       <Stack.Screen
@@ -86,6 +87,11 @@ export default function TripsStackNavigator() {
         name="EditTripItem"
         component={EditTripItemScreen}
         options={{ title: "Edit Item" }}
+      />
+      <Stack.Screen
+        name="SaveTripAsTemplate"
+        component={SaveTripAsTemplateScreen}
+        options={{ title: "Save as Template" }}
       />
 
     </Stack.Navigator>

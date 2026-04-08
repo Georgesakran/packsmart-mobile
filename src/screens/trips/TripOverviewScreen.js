@@ -780,6 +780,18 @@ export default function TripOverviewScreen({ route, navigation }) {
                 loading={calculating}
                 variant="secondary"
               />
+              <AppButton
+                title="Save as Template"
+                variant="secondary"
+                onPress={() =>
+                  navigation.navigate("SaveTripAsTemplate", {
+                    tripId,
+                    tripName: trip?.trip_name,
+                    travelType: trip?.travel_type,
+                    weatherType: trip?.weather_type,
+                  })
+                }
+              />
             </View>
           </AppCard>
 

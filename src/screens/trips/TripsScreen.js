@@ -17,90 +17,105 @@ import EmptyState from "../../components/common/EmptyState";
 
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
-import { getPackingTemplates } from "../../api/tripApi";
+import { getTrips } from "../../api/tripApi";
 
-function normalizeTemplate(t) {
+function normalizeTrip(trip) {
+  const bagsCount = Number(trip.bagsCount || trip.bags_count || 0);
+  const itemsCount = Number(trip.itemsCount || trip.items_count || 0);
+  const hasResults = !!trip.hasResults || !!trip.has_results;
+  const overallFits = trip.overallFits === true || trip.overall_fits === true;
+  const checklistStarted =
+    trip.checklistStarted === true || trip.checklist_started === true;
+  const travelDayConfigured =
+    trip.travelDayConfigured === true || trip.travel_day_configured === true;
+
+  let readinessScore = 0;
+  if (bagsCount > 0) readinessScore += 25;
+  if (itemsCount > 0) readinessScore += 20;
+  if (hasResults) readinessScore += 20;
+  if (checklistStarted) readinessScore += 20;
+  if (travelDayConfigured) readinessScore += 15;
+
+  let readinessLabel = "Needs work";
+  let readinessTone = "warning";
+
+  if (!hasResults) {
+    readinessLabel = "No results";
+    readinessTone = "neutral";
+  } else if (overallFits && readinessScore >= 85) {
+    readinessLabel = "Ready";
+    readinessTone = "success";
+  } else if (overallFits) {
+    readinessLabel = "Good progress";
+    readinessTone = "info";
+  }
+
   return {
-    id: t.id,
-    name: t.name || "Unnamed Template",
-    notes: t.notes || t.description || "No description",
-    travel_type: t.travel_type || t.travelType || "Any",
-    weather_type: t.weather_type || t.weatherType || "Any",
-    created_at: t.created_at || t.createdAt || null,
-    itemCount:
-      t.item_count ??
-      t.items_count ??
-      t.itemsCount ??
-      (Array.isArray(t.items) ? t.items.length : 0),
+    ...trip,
+    bagsCount,
+    itemsCount,
+    hasResults,
+    overallFits,
+    checklistStarted,
+    travelDayConfigured,
+    readinessScore,
+    readinessLabel,
+    readinessTone,
   };
 }
 
-export default function TemplatesScreen({ navigation }) {
+export default function TripsScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
-  const [templates, setTemplates] = useState([]);
+  const [trips, setTrips] = useState([]);
   const [error, setError] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [filterBy, setFilterBy] = useState("all");
 
-  const loadTemplates = useCallback(async () => {
+  const loadTrips = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      const data = await getPackingTemplates();
-      const safeTemplates = Array.isArray(data) ? data.map(normalizeTemplate) : [];
-      setTemplates(safeTemplates);
+      const data = await getTrips();
+      const tripsArray = Array.isArray(data) ? data : [];
+      setTrips(tripsArray.map(normalizeTrip));
     } catch (err) {
-      console.error("Load templates error:", err);
-      setError(err?.response?.data?.message || "Failed to load templates.");
+      console.error("Load trips error:", err);
+      setError(err?.response?.data?.message || "Failed to load trips.");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadTemplates();
-  }, [loadTemplates]);
+    loadTrips();
+  }, [loadTrips]);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", loadTemplates);
+    const unsubscribe = navigation.addListener("focus", loadTrips);
     return unsubscribe;
-  }, [navigation, loadTemplates]);
+  }, [navigation, loadTrips]);
 
-  const filteredTemplates = useMemo(() => {
-    let result = [...templates];
+  const filteredTrips = useMemo(() => {
+    let result = [...trips];
 
-    const q = searchTerm.trim().toLowerCase();
-    if (q) {
-      result = result.filter((template) => {
-        const name = (template.name || "").toLowerCase();
-        const notes = (template.notes || "").toLowerCase();
-        const travelType = (template.travel_type || "").toLowerCase();
-        const weatherType = (template.weather_type || "").toLowerCase();
-
-        return (
-          name.includes(q) ||
-          notes.includes(q) ||
-          travelType.includes(q) ||
-          weatherType.includes(q)
-        );
+    const query = searchTerm.trim().toLowerCase();
+    if (query) {
+      result = result.filter((trip) => {
+        const tripName = (trip.trip_name || "").toLowerCase();
+        const destination = (trip.destination || "").toLowerCase();
+        return tripName.includes(query) || destination.includes(query);
       });
     }
 
-    if (filterBy === "with_items") {
-      result = result.filter((template) => Number(template.itemCount || 0) > 0);
-    } else if (filterBy === "empty") {
-      result = result.filter((template) => Number(template.itemCount || 0) === 0);
-    } else if (filterBy === "casual") {
-      result = result.filter(
-        (template) => (template.travel_type || "").toLowerCase() === "casual"
-      );
-    } else if (filterBy === "hot") {
-      result = result.filter(
-        (template) => (template.weather_type || "").toLowerCase() === "hot"
-      );
+    if (filterBy === "ready") {
+      result = result.filter((trip) => trip.hasResults && trip.overallFits);
+    } else if (filterBy === "needs_work") {
+      result = result.filter((trip) => trip.hasResults && !trip.overallFits);
+    } else if (filterBy === "no_results") {
+      result = result.filter((trip) => !trip.hasResults);
     }
 
     result.sort((a, b) => {
@@ -111,23 +126,23 @@ export default function TemplatesScreen({ navigation }) {
         return new Date(a.created_at || 0) - new Date(b.created_at || 0);
       }
       if (sortBy === "name_asc") {
-        return (a.name || "").localeCompare(b.name || "");
+        return (a.trip_name || "").localeCompare(b.trip_name || "");
       }
-      if (sortBy === "items_desc") {
-        return Number(b.itemCount || 0) - Number(a.itemCount || 0);
+      if (sortBy === "readiness_desc") {
+        return b.readinessScore - a.readinessScore;
       }
       return 0;
     });
 
     return result;
-  }, [templates, searchTerm, sortBy, filterBy]);
+  }, [trips, searchTerm, sortBy, filterBy]);
 
   if (loading) {
     return (
       <AppScreen>
         <View style={styles.centerBlock}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.helperText}>Loading templates...</Text>
+          <Text style={styles.helperText}>Loading trips...</Text>
         </View>
       </AppScreen>
     );
@@ -137,22 +152,22 @@ export default function TemplatesScreen({ navigation }) {
     <AppScreen>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.container}>
-          <Text style={styles.kicker}>Templates</Text>
-          <Text style={styles.title}>Packing Templates</Text>
+          <Text style={styles.kicker}>Trips</Text>
+          <Text style={styles.title}>My Trips</Text>
           <Text style={styles.subtitle}>
-            Search, sort, and manage your reusable packing templates.
+            Search, sort, and filter your trips from one place.
           </Text>
 
           <View style={styles.topActionsRow}>
             <AppButton
-              title="Create Template"
-              onPress={() => navigation.navigate("CreateTemplate")}
+              title="Create Trip"
+              onPress={() => navigation.navigate("CreateTrip")}
               style={styles.flexButton}
             />
             <AppButton
               title="Refresh"
               variant="secondary"
-              onPress={loadTemplates}
+              onPress={loadTrips}
               style={styles.flexButton}
             />
           </View>
@@ -166,13 +181,13 @@ export default function TemplatesScreen({ navigation }) {
           <AppCard>
             <SectionHeader
               title="Search"
-              subtitle="Find templates by name, notes, travel type, or weather."
+              subtitle="Find a trip by name or destination."
             />
 
             <TextInput
               value={searchTerm}
               onChangeText={setSearchTerm}
-              placeholder="Search templates..."
+              placeholder="Search trips..."
               placeholderTextColor="#9ca3af"
               style={styles.searchInput}
             />
@@ -181,7 +196,7 @@ export default function TemplatesScreen({ navigation }) {
           <AppCard>
             <SectionHeader
               title="Sort"
-              subtitle="Choose how templates should be ordered."
+              subtitle="Choose how trips should be ordered."
             />
 
             <View style={styles.filtersRow}>
@@ -204,9 +219,9 @@ export default function TemplatesScreen({ navigation }) {
                 style={styles.filterButton}
               />
               <AppButton
-                title="Most Items"
-                variant={sortBy === "items_desc" ? "primary" : "secondary"}
-                onPress={() => setSortBy("items_desc")}
+                title="Readiness"
+                variant={sortBy === "readiness_desc" ? "primary" : "secondary"}
+                onPress={() => setSortBy("readiness_desc")}
                 style={styles.filterButton}
               />
             </View>
@@ -215,7 +230,7 @@ export default function TemplatesScreen({ navigation }) {
           <AppCard>
             <SectionHeader
               title="Filters"
-              subtitle="Focus on the templates you want right now."
+              subtitle="Focus on the trips that matter right now."
             />
 
             <View style={styles.filtersRow}>
@@ -226,27 +241,21 @@ export default function TemplatesScreen({ navigation }) {
                 style={styles.filterButton}
               />
               <AppButton
-                title="With Items"
-                variant={filterBy === "with_items" ? "primary" : "secondary"}
-                onPress={() => setFilterBy("with_items")}
+                title="Ready"
+                variant={filterBy === "ready" ? "primary" : "secondary"}
+                onPress={() => setFilterBy("ready")}
                 style={styles.filterButton}
               />
               <AppButton
-                title="Empty"
-                variant={filterBy === "empty" ? "primary" : "secondary"}
-                onPress={() => setFilterBy("empty")}
+                title="Needs Work"
+                variant={filterBy === "needs_work" ? "primary" : "secondary"}
+                onPress={() => setFilterBy("needs_work")}
                 style={styles.filterButton}
               />
               <AppButton
-                title="Casual"
-                variant={filterBy === "casual" ? "primary" : "secondary"}
-                onPress={() => setFilterBy("casual")}
-                style={styles.filterButton}
-              />
-              <AppButton
-                title="Hot"
-                variant={filterBy === "hot" ? "primary" : "secondary"}
-                onPress={() => setFilterBy("hot")}
+                title="No Results"
+                variant={filterBy === "no_results" ? "primary" : "secondary"}
+                onPress={() => setFilterBy("no_results")}
                 style={styles.filterButton}
               />
             </View>
@@ -254,63 +263,60 @@ export default function TemplatesScreen({ navigation }) {
 
           <AppCard>
             <SectionHeader
-              title="Templates List"
-              subtitle={`${filteredTemplates.length} template${
-                filteredTemplates.length === 1 ? "" : "s"
-              } found.`}
+              title="Trips List"
+              subtitle={`${filteredTrips.length} trip${filteredTrips.length === 1 ? "" : "s"} found.`}
             />
 
-            {filteredTemplates.length === 0 ? (
+            {filteredTrips.length === 0 ? (
               <EmptyState
-                title="No templates found"
+                title="No trips found"
                 description="Try changing the search, sort, or filter options."
               />
             ) : (
-              filteredTemplates.map((template) => (
-                <AppCard key={template.id} style={styles.templateCard}>
-                  <View style={styles.templateTopRow}>
-                    <View style={styles.templateTextWrap}>
-                      <Text style={styles.templateTitle}>{template.name}</Text>
-                      <Text style={styles.templateSubtitle}>{template.notes}</Text>
+              filteredTrips.map((trip) => (
+                <AppCard key={trip.id} style={styles.tripCard}>
+                  <View style={styles.tripTopRow}>
+                    <View style={styles.tripTextWrap}>
+                      <Text style={styles.tripTitle}>
+                        {trip.trip_name || "Unnamed Trip"}
+                      </Text>
+                      <Text style={styles.tripSubtitle}>
+                        {trip.destination || "No destination"}
+                      </Text>
                     </View>
 
                     <StatusBadge
-                      label={`${template.itemCount} item${
-                        template.itemCount === 1 ? "" : "s"
-                      }`}
-                      tone="info"
+                      label={`${trip.readinessScore}/100`}
+                      tone={trip.readinessTone}
                     />
                   </View>
 
                   <View style={styles.metaGroup}>
                     <Text style={styles.metaText}>
-                      <Text style={styles.metaLabel}>Travel Type: </Text>
-                      {template.travel_type}
+                      <Text style={styles.metaLabel}>Status: </Text>
+                      {trip.readinessLabel}
                     </Text>
-
                     <Text style={styles.metaText}>
-                      <Text style={styles.metaLabel}>Weather: </Text>
-                      {template.weather_type}
+                      <Text style={styles.metaLabel}>Bags: </Text>
+                      {trip.bagsCount}
+                    </Text>
+                    <Text style={styles.metaText}>
+                      <Text style={styles.metaLabel}>Items: </Text>
+                      {trip.itemsCount}
+                    </Text>
+                    <Text style={styles.metaText}>
+                      <Text style={styles.metaLabel}>Results: </Text>
+                      {trip.hasResults ? "Yes" : "No"}
                     </Text>
                   </View>
 
                   <View style={styles.actionColumn}>
                     <AppButton
-                      title="Open Details"
+                      title="Open Trip"
                       variant="secondary"
                       onPress={() =>
-                        navigation.navigate("TemplateDetails", {
-                          templateId: template.id,
-                        })
-                      }
-                    />
-
-                    <AppButton
-                      title="Edit Template"
-                      variant="secondary"
-                      onPress={() =>
-                        navigation.navigate("EditTemplate", {
-                          templateId: template.id,
+                        navigation.navigate("TripOverview", {
+                          tripId: trip.id,
                         })
                       }
                     />
@@ -394,30 +400,29 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
   },
-  templateCard: {
+  tripCard: {
     backgroundColor: "#f8fafc",
     marginTop: spacing.sm,
   },
-  templateTopRow: {
+  tripTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     gap: spacing.md,
     marginBottom: spacing.md,
   },
-  templateTextWrap: {
+  tripTextWrap: {
     flex: 1,
   },
-  templateTitle: {
-    fontSize: 18,
+  tripTitle: {
+    fontSize: 17,
     fontWeight: "700",
     color: colors.text,
     marginBottom: 6,
   },
-  templateSubtitle: {
+  tripSubtitle: {
     fontSize: 14,
     color: colors.textMuted,
-    lineHeight: 20,
   },
   metaGroup: {
     gap: 8,

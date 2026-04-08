@@ -247,3 +247,8 @@ export const deletePackingTemplate = async (templateId) => {
   const response = await client.delete(`/packing-templates/${templateId}`);
   return response.data;
 };
+
+export const saveTripAsTemplate = async (tripId, payload) => {
+  const response = await client.post(`/packing-templates/from-trip/${tripId}`, payload);
+  return response.data;
+};
