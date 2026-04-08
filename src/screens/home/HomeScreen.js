@@ -1,19 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
 import AppScreen from "../../components/common/AppScreen";
 import AppCard from "../../components/common/AppCard";
 import AppButton from "../../components/common/AppButton";
 import StatusBadge from "../../components/common/StatusBadge";
 import SectionHeader from "../../components/common/SectionHeader";
 import EmptyState from "../../components/common/EmptyState";
+
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
-import {
-  getTrips,
-  getTripItems,
-  getTripResults,
-  getTripSuitcases,
-} from "../../api/tripApi";
+import { getTrips } from "../../api/tripApi";
 import { useNotifications } from "../../context/NotificationsContext";
 import { buildHomeInsights } from "../../utils/buildHomeInsights";
 
@@ -28,11 +31,9 @@ export default function HomeScreen({ navigation }) {
     try {
       setLoading(true);
       setError("");
-  
+
       const tripsData = await getTrips();
-      const tripsArray = Array.isArray(tripsData) ? tripsData : [];
-  
-      setTrips(tripsArray);
+      setTrips(Array.isArray(tripsData) ? tripsData : []);
       await refreshNotifications();
     } catch (err) {
       console.error("Load home data error:", err);
@@ -46,9 +47,22 @@ export default function HomeScreen({ navigation }) {
     loadHomeData();
   }, [loadHomeData]);
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", loadHomeData);
+    return unsubscribe;
+  }, [navigation, loadHomeData]);
+
   const insights = useMemo(() => {
     return buildHomeInsights(trips, notifications);
   }, [trips, notifications]);
+
+  const topTripTone = useMemo(() => {
+    const score = insights.topTrip?.readinessScore || 0;
+    if (score >= 85) return "success";
+    if (score >= 60) return "info";
+    if (score >= 35) return "warning";
+    return "danger";
+  }, [insights.topTrip]);
 
   if (loading) {
     return (
@@ -68,7 +82,7 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.kicker}>PackSmart</Text>
           <Text style={styles.title}>Home Dashboard</Text>
           <Text style={styles.subtitle}>
-            Active trips, reminders, and the next best actions in one place.
+            Your trips, reminders, and next best actions in one place.
           </Text>
 
           {error ? (
@@ -78,12 +92,12 @@ export default function HomeScreen({ navigation }) {
           ) : null}
 
           <AppCard style={styles.heroCard}>
-            <SectionHeader
-              title="Your Activity Snapshot"
-              subtitle="A quick look at your current travel planning state."
-            />
+            <Text style={styles.heroTitle}>Today’s Travel Snapshot</Text>
+            <Text style={styles.heroSubtitle}>
+              A quick view of your current planning momentum.
+            </Text>
 
-            <View style={styles.heroStatsRow}>
+            <View style={styles.heroStatsGrid}>
               <View style={styles.heroStatBox}>
                 <Text style={styles.heroStatLabel}>Trips</Text>
                 <Text style={styles.heroStatValue}>{insights.totalTrips}</Text>
@@ -91,7 +105,9 @@ export default function HomeScreen({ navigation }) {
 
               <View style={styles.heroStatBox}>
                 <Text style={styles.heroStatLabel}>Reminders</Text>
-                <Text style={styles.heroStatValue}>{insights.totalNotifications}</Text>
+                <Text style={styles.heroStatValue}>
+                  {insights.totalNotifications}
+                </Text>
               </View>
 
               <View style={styles.heroStatBox}>
@@ -106,7 +122,7 @@ export default function HomeScreen({ navigation }) {
           <AppCard>
             <SectionHeader
               title="Quick Actions"
-              subtitle="Jump into the most common trip actions."
+              subtitle="The fastest ways to move your planning forward."
             />
 
             <View style={styles.quickActionsRow}>
@@ -121,76 +137,101 @@ export default function HomeScreen({ navigation }) {
               />
 
               <AppButton
+                title="Open Trips"
+                variant="secondary"
+                onPress={() => navigation.navigate("Trips")}
+                style={styles.flexButton}
+              />
+            </View>
+
+            <View style={styles.quickActionsRow}>
+              <AppButton
                 title="Open Notifications"
                 variant="secondary"
                 onPress={() => navigation.navigate("Notifications")}
                 style={styles.flexButton}
               />
+
+              <AppButton
+                title="Open Templates"
+                variant="secondary"
+                onPress={() => navigation.navigate("Templates")}
+                style={styles.flexButton}
+              />
             </View>
           </AppCard>
 
-          <AppCard>
+          <AppCard style={styles.focusCard}>
             <SectionHeader
-              title="Top Active Trip"
-              subtitle="The strongest or most advanced trip right now."
+              title="Current Focus"
+              subtitle="The trip that currently deserves the most attention."
             />
 
             {!insights.topTrip ? (
               <EmptyState
                 title="No active trips yet"
-                description="Create your first trip to start seeing active trip insights."
+                description="Create your first trip to start building your travel flow."
               />
             ) : (
-              <View style={styles.topTripWrap}>
-                <View style={styles.topTripHeader}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.topTripName}>
+              <View style={styles.focusWrap}>
+                <View style={styles.focusTopRow}>
+                  <View style={styles.focusTextWrap}>
+                    <Text style={styles.focusTripName}>
                       {insights.topTrip.trip_name || "Unnamed Trip"}
                     </Text>
-                    <Text style={styles.topTripSubtext}>
+                    <Text style={styles.focusTripMeta}>
                       {insights.topTrip.destination || "No destination"}
                     </Text>
                   </View>
 
                   <StatusBadge
                     label={`${insights.topTrip.readinessScore}/100`}
-                    tone={
-                      insights.topTrip.readinessScore >= 85
-                        ? "success"
-                        : insights.topTrip.readinessScore >= 60
-                        ? "info"
-                        : insights.topTrip.readinessScore >= 35
-                        ? "warning"
-                        : "danger"
-                    }
+                    tone={topTripTone}
                   />
                 </View>
 
-                <View style={styles.topTripMeta}>
-                  <Text style={styles.metaText}>
-                    <Text style={styles.metaLabel}>Bags: </Text>
-                    {insights.topTrip.bagsCount}
+                <View style={styles.focusDetails}>
+                  <Text style={styles.focusDetailText}>
+                    <Text style={styles.focusDetailLabel}>Next Action: </Text>
+                    {insights.topTrip.nextAction}
                   </Text>
-                  <Text style={styles.metaText}>
-                    <Text style={styles.metaLabel}>Items: </Text>
+
+                  <Text style={styles.focusDetailText}>
+                    <Text style={styles.focusDetailLabel}>Bags: </Text>
+                    {insights.topTrip.bagsCount}
+                    {"   "}
+                    <Text style={styles.focusDetailLabel}>Items: </Text>
                     {insights.topTrip.itemsCount}
                   </Text>
-                  <Text style={styles.metaText}>
-                    <Text style={styles.metaLabel}>Next Action: </Text>
-                    {insights.topTrip.nextAction}
+
+                  <Text style={styles.focusDetailText}>
+                    <Text style={styles.focusDetailLabel}>Results: </Text>
+                    {insights.topTrip.hasResults ? "Ready" : "Not calculated"}
                   </Text>
                 </View>
 
-                <AppButton
-                  title="Open Trip"
-                  variant="secondary"
-                  onPress={() =>
-                    navigation.navigate("Trips", {
-                      screen: "TripOverview",
-                      params: { tripId: insights.topTrip.id },
-                    })
-                  }
-                />
+                <View style={styles.focusButtons}>
+                  <AppButton
+                    title="Open Trip"
+                    onPress={() =>
+                      navigation.navigate("Trips", {
+                        screen: "TripOverview",
+                        params: { tripId: insights.topTrip.id },
+                      })
+                    }
+                  />
+
+                  <AppButton
+                    title="Trip Results"
+                    variant="secondary"
+                    onPress={() =>
+                      navigation.navigate("Trips", {
+                        screen: "TripResults",
+                        params: { tripId: insights.topTrip.id },
+                      })
+                    }
+                  />
+                </View>
               </View>
             )}
           </AppCard>
@@ -198,7 +239,7 @@ export default function HomeScreen({ navigation }) {
           <AppCard>
             <SectionHeader
               title="Urgent Reminders"
-              subtitle="The most important reminders needing attention now."
+              subtitle="The highest-priority signals that need attention now."
             />
 
             {insights.urgentNotifications.length === 0 ? (
@@ -208,12 +249,13 @@ export default function HomeScreen({ navigation }) {
               />
             ) : (
               insights.urgentNotifications.slice(0, 3).map((item) => (
-                <View key={item.id} style={styles.reminderRow}>
-                  <View style={{ flex: 1 }}>
+                <View key={item.id} style={styles.reminderCard}>
+                  <View style={styles.reminderHeader}>
                     <Text style={styles.reminderTitle}>{item.title}</Text>
-                    <Text style={styles.reminderMessage}>{item.message}</Text>
+                    <StatusBadge label="Urgent" tone="danger" />
                   </View>
-                  <StatusBadge label="Urgent" tone="danger" />
+
+                  <Text style={styles.reminderMessage}>{item.message}</Text>
                 </View>
               ))
             )}
@@ -222,27 +264,27 @@ export default function HomeScreen({ navigation }) {
           <AppCard>
             <SectionHeader
               title="Active Trips"
-              subtitle="Your trips sorted by readiness and planning progress."
+              subtitle="Trips ranked by readiness and planning progress."
             />
 
             {insights.activeTrips.length === 0 ? (
               <EmptyState
                 title="No trips yet"
-                description="Create a trip to start building your packing workflow."
+                description="Create a trip to begin planning and tracking."
               />
             ) : (
               insights.activeTrips.slice(0, 5).map((trip) => (
-                <View key={trip.id} style={styles.tripRow}>
-                  <View style={styles.tripRowText}>
-                    <Text style={styles.tripRowTitle}>
-                      {trip.trip_name || "Unnamed Trip"}
-                    </Text>
-                    <Text style={styles.tripRowSubtitle}>
-                      {trip.destination || "No destination"} • {trip.nextAction}
-                    </Text>
-                  </View>
+                <View key={trip.id} style={styles.tripRowCard}>
+                  <View style={styles.tripRowTop}>
+                    <View style={styles.tripRowText}>
+                      <Text style={styles.tripRowTitle}>
+                        {trip.trip_name || "Unnamed Trip"}
+                      </Text>
+                      <Text style={styles.tripRowSubtitle}>
+                        {trip.destination || "No destination"}
+                      </Text>
+                    </View>
 
-                  <View style={styles.tripRowRight}>
                     <StatusBadge
                       label={`${trip.readinessScore}/100`}
                       tone={
@@ -256,6 +298,20 @@ export default function HomeScreen({ navigation }) {
                       }
                     />
                   </View>
+
+                  <Text style={styles.tripRowHint}>{trip.nextAction}</Text>
+
+                  <AppButton
+                    title="Open"
+                    variant="secondary"
+                    onPress={() =>
+                      navigation.navigate("Trips", {
+                        screen: "TripOverview",
+                        params: { tripId: trip.id },
+                      })
+                    }
+                    style={styles.openButton}
+                  />
                 </View>
               ))
             )}
@@ -296,12 +352,10 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "800",
     color: colors.text,
-    marginTop: 4,
   },
   subtitle: {
     fontSize: 15,
     color: colors.textMuted,
-    marginTop: 4,
   },
   errorCard: {
     backgroundColor: "#fef2f2",
@@ -312,9 +366,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   heroCard: {
-    borderRadius: 20,
+    borderRadius: 22,
   },
-  heroStatsRow: {
+  heroTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: colors.text,
+    marginBottom: 6,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    color: colors.textMuted,
+    lineHeight: 21,
+    marginBottom: spacing.lg,
+  },
+  heroStatsGrid: {
     flexDirection: "row",
     gap: spacing.sm,
     flexWrap: "wrap",
@@ -325,7 +391,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8fafc",
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 14,
+    borderRadius: 16,
     padding: spacing.md,
   },
   heroStatLabel: {
@@ -334,81 +400,103 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   heroStatValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "800",
     color: colors.text,
   },
   quickActionsRow: {
     flexDirection: "row",
     gap: spacing.sm,
+    marginTop: spacing.sm,
   },
   flexButton: {
     flex: 1,
   },
-  topTripWrap: {
+  focusCard: {
+    borderRadius: 20,
+  },
+  focusWrap: {
     gap: spacing.md,
   },
-  topTripHeader: {
+  focusTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     gap: spacing.md,
   },
-  topTripName: {
-    fontSize: 18,
+  focusTextWrap: {
+    flex: 1,
+  },
+  focusTripName: {
+    fontSize: 20,
     fontWeight: "800",
     color: colors.text,
     marginBottom: 6,
   },
-  topTripSubtext: {
+  focusTripMeta: {
     fontSize: 14,
     color: colors.textMuted,
   },
-  topTripMeta: {
+  focusDetails: {
     gap: 8,
   },
-  metaText: {
+  focusDetailText: {
     fontSize: 14,
     color: colors.textMuted,
   },
-  metaLabel: {
+  focusDetailLabel: {
     color: colors.text,
     fontWeight: "700",
   },
-  reminderRow: {
+  focusButtons: {
+    gap: spacing.sm,
+  },
+  reminderCard: {
+    backgroundColor: "#fff7ed",
+    borderWidth: 1,
+    borderColor: "#fdba74",
+    borderRadius: 16,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+  },
+  reminderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     gap: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    marginBottom: 8,
   },
   reminderTitle: {
+    flex: 1,
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.text,
-    marginBottom: 4,
   },
   reminderMessage: {
     fontSize: 14,
     color: colors.textMuted,
     lineHeight: 20,
   },
-  tripRow: {
+  tripRowCard: {
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+  },
+  tripRowTop: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    marginBottom: 8,
   },
   tripRowText: {
     flex: 1,
   },
   tripRowTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
     color: colors.text,
     marginBottom: 4,
@@ -416,9 +504,13 @@ const styles = StyleSheet.create({
   tripRowSubtitle: {
     fontSize: 13,
     color: colors.textMuted,
-    lineHeight: 18,
   },
-  tripRowRight: {
-    alignItems: "flex-end",
+  tripRowHint: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginBottom: spacing.md,
+  },
+  openButton: {
+    marginTop: 2,
   },
 });
