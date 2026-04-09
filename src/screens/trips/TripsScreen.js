@@ -18,7 +18,6 @@ import EmptyState from "../../components/common/EmptyState";
 import { buildQuickInsightBadges } from "../../utils/buildQuickInsightBadges";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
-import { Alert } from "react-native";
 import {
   getTrips,
   duplicateTrip,
