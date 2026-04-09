@@ -13,6 +13,7 @@ import AppButton from "../../components/common/AppButton";
 import AppCard from "../../components/common/AppCard";
 import StatusBadge from "../../components/common/StatusBadge";
 import SectionHeader from "../../components/common/SectionHeader";
+import { formatActivityDate, getActivityEventMeta, } from "../../utils/activityHistoryFormatter";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { useNotifications } from "../../context/NotificationsContext";
@@ -776,21 +777,46 @@ export default function TripOverviewScreen({ route, navigation }) {
                 description="This trip does not have any recorded history yet."
               />
             ) : (
-              activityHistory.slice(0, 8).map((event) => (
-                <View key={event.id} style={styles.activityRow}>
-                  <View style={styles.activityDot} />
+              activityHistory.slice(0, 8).map((event, index) => {
+                const meta = getActivityEventMeta(event.event_type);
 
-                  <View style={styles.activityContent}>
-                    <Text style={styles.activityTitle}>{event.title}</Text>
-                    {event.details ? (
-                      <Text style={styles.activityDetails}>{event.details}</Text>
-                    ) : null}
-                    <Text style={styles.activityDate}>
-                      {new Date(event.created_at).toLocaleString()}
-                    </Text>
+                return (
+                  <View key={event.id} style={styles.activityRow}>
+                    <View style={styles.activityTimelineCol}>
+                      <View
+                        style={[
+                          styles.activityDot,
+                          meta.tone === "success"
+                            ? styles.activityDotSuccess
+                            : meta.tone === "warning"
+                            ? styles.activityDotWarning
+                            : meta.tone === "info"
+                            ? styles.activityDotInfo
+                            : styles.activityDotNeutral,
+                        ]}
+                      />
+                      {index !== activityHistory.slice(0, 8).length - 1 ? (
+                        <View style={styles.activityLine} />
+                      ) : null}
+                    </View>
+
+                    <View style={styles.activityContent}>
+                      <View style={styles.activityHeaderRow}>
+                        <Text style={styles.activityTitle}>{meta.label}</Text>
+                        <StatusBadge label={meta.label} tone={meta.tone} />
+                      </View>
+
+                      {event.details ? (
+                        <Text style={styles.activityDetails}>{event.details}</Text>
+                      ) : null}
+
+                      <Text style={styles.activityDate}>
+                        {formatActivityDate(event.created_at)}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              ))
+                );
+              })
             )}
           </AppCard>
 
@@ -1237,31 +1263,83 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  activityDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: colors.primary,
-    marginTop: 6,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: 4,
-  },
+
   activityDetails: {
     fontSize: 13,
     color: colors.textMuted,
     lineHeight: 19,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   activityDate: {
     fontSize: 12,
     color: colors.textMuted,
   },
+  activityRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  
+  activityTimelineCol: {
+    alignItems: "center",
+    width: 18,
+  },
+  
+  activityDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    marginTop: 6,
+  },
+  
+  activityDotSuccess: {
+    backgroundColor: "#22c55e",
+  },
+  
+  activityDotWarning: {
+    backgroundColor: "#f59e0b",
+  },
+  
+  activityDotInfo: {
+    backgroundColor: "#3b82f6",
+  },
+  
+  activityDotNeutral: {
+    backgroundColor: "#94a3b8",
+  },
+  
+  activityLine: {
+    width: 2,
+    flex: 1,
+    minHeight: 32,
+    backgroundColor: colors.border,
+    marginTop: 4,
+  },
+  
+  activityContent: {
+    flex: 1,
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: spacing.md,
+  },
+  
+  activityHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.md,
+    marginBottom: 8,
+  },
+  
+  activityTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.text,
+  },
+  
 
 });
