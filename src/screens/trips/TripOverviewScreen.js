@@ -18,6 +18,7 @@ import {
   getActivityEventMeta,
   prettifyActivityDetails,
 } from "../../utils/activityHistoryFormatter";
+import { buildTripActivityInsights } from "../../utils/buildTripActivityInsights";
 import { groupActivityHistory } from "../../utils/groupActivityHistory";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
@@ -527,6 +528,20 @@ export default function TripOverviewScreen({ route, navigation }) {
     return groupActivityHistory(visibleActivityHistory);
   }, [visibleActivityHistory]);
 
+  const activityInsights = useMemo(() => {
+    return buildTripActivityInsights(activityHistory);
+  }, [activityHistory]);
+
+  const renderInsightValue = (event, fallback) => {
+    if (!event) return fallback;
+  
+    return {
+      title: event.title || "Activity",
+      details: event.details || "No details available.",
+      date: formatActivityDate(event.created_at),
+    };
+  };
+
   if (loading) {
     return (
       <AppScreen>
@@ -774,6 +789,74 @@ export default function TripOverviewScreen({ route, navigation }) {
 
                     <Text style={styles.timelineStepDescription}>{step.description}</Text>
                   </View>
+                </View>
+              ))}
+            </View>
+          </AppCard>
+
+          <AppCard style={styles.sectionCard}>
+            <SectionHeader
+              title="Recent Insights"
+              subtitle="Quick operational highlights based on this trip's activity history."
+            />
+
+            <View style={styles.insightsGrid}>
+              {[
+                {
+                  label: "Last Activity",
+                  value: renderInsightValue(
+                    activityInsights.latestActivity,
+                    "No activity yet"
+                  ),
+                },
+                {
+                  label: "Last Calculation",
+                  value: renderInsightValue(
+                    activityInsights.lastCalculated,
+                    "No calculation yet"
+                  ),
+                },
+                {
+                  label: "Last Template Applied",
+                  value: renderInsightValue(
+                    activityInsights.lastTemplateApplied,
+                    "No template applied yet"
+                  ),
+                },
+                {
+                  label: "Last Checklist Update",
+                  value: renderInsightValue(
+                    activityInsights.lastChecklistUpdate,
+                    "No checklist updates yet"
+                  ),
+                },
+                {
+                  label: "Last Travel-Day Update",
+                  value: renderInsightValue(
+                    activityInsights.lastTravelDayUpdate,
+                    "No travel-day updates yet"
+                  ),
+                },
+                {
+                  label: "Last Suggestions",
+                  value: renderInsightValue(
+                    activityInsights.lastSuggestionsGenerated,
+                    "No suggestions generated yet"
+                  ),
+                },
+              ].map((item) => (
+                <View key={item.label} style={styles.insightCard}>
+                  <Text style={styles.insightLabel}>{item.label}</Text>
+
+                  {typeof item.value === "string" ? (
+                    <Text style={styles.insightFallback}>{item.value}</Text>
+                  ) : (
+                    <>
+                      <Text style={styles.insightTitle}>{item.value.title}</Text>
+                      <Text style={styles.insightDetails}>{item.value.details}</Text>
+                      <Text style={styles.insightDate}>{item.value.date}</Text>
+                    </>
+                  )}
                 </View>
               ))}
             </View>
@@ -1390,6 +1473,51 @@ const styles = StyleSheet.create({
   
   showMoreButton: {
     marginTop: spacing.md,
+  },
+
+  insightsGrid: {
+    gap: spacing.sm,
+  },
+  
+  insightCard: {
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: spacing.md,
+  },
+  
+  insightLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: colors.textMuted,
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  
+  insightTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: 6,
+  },
+  
+  insightDetails: {
+    fontSize: 13,
+    color: colors.textMuted,
+    lineHeight: 19,
+    marginBottom: 6,
+  },
+  
+  insightDate: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  
+  insightFallback: {
+    fontSize: 13,
+    color: colors.textMuted,
+    lineHeight: 18,
   },
 
 });
