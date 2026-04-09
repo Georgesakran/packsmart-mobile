@@ -6,7 +6,9 @@ import {
   Text,
   TextInput,
   View,
+  Alert,
 } from "react-native";
+
 
 import AppScreen from "../../components/common/AppScreen";
 import AppCard from "../../components/common/AppCard";
@@ -17,7 +19,7 @@ import EmptyState from "../../components/common/EmptyState";
 
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
-import { getPackingTemplates } from "../../api/tripApi";
+import { getPackingTemplates , bulkDeletePackingTemplates} from "../../api/tripApi";
 
 function normalizeTemplate(t) {
   return {
@@ -43,6 +45,10 @@ export default function TemplatesScreen({ navigation }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [filterBy, setFilterBy] = useState("all");
+
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedTemplateIds, setSelectedTemplateIds] = useState([]);
+  const [actionMessage, setActionMessage] = useState("");
 
   const loadTemplates = useCallback(async () => {
     try {
@@ -122,6 +128,56 @@ export default function TemplatesScreen({ navigation }) {
     return result;
   }, [templates, searchTerm, sortBy, filterBy]);
 
+  const toggleTemplateSelection = (templateId) => {
+    setSelectedTemplateIds((prev) =>
+      prev.includes(templateId)
+        ? prev.filter((id) => id !== templateId)
+        : [...prev, templateId]
+    );
+  };
+  
+  const clearSelection = () => {
+    setSelectedTemplateIds([]);
+    setSelectionMode(false);
+  };
+
+  const handleBulkDeleteTemplates = () => {
+    Alert.alert(
+      "Delete Selected Templates",
+      `Are you sure you want to permanently delete ${selectedTemplateIds.length} selected template(s)? This action cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setError("");
+              setActionMessage("");
+  
+              const data = await bulkDeletePackingTemplates(selectedTemplateIds);
+              setActionMessage(
+                data?.message || "Selected templates deleted successfully."
+              );
+  
+              clearSelection();
+              await loadTemplates();
+            } catch (err) {
+              console.error("Bulk delete templates error:", err);
+              setError(
+                err?.response?.data?.message ||
+                  "Failed to delete selected templates."
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <AppScreen>
@@ -162,6 +218,51 @@ export default function TemplatesScreen({ navigation }) {
               <Text style={styles.errorText}>{error}</Text>
             </AppCard>
           ) : null}
+
+          {actionMessage ? (
+            <AppCard style={styles.successCard}>
+              <Text style={styles.successText}>{actionMessage}</Text>
+            </AppCard>
+          ) : null}
+
+          <AppCard>
+            <SectionHeader
+              title="Bulk Management"
+              subtitle="Select multiple templates and remove them together."
+            />
+
+            <View style={styles.bulkTopRow}>
+              <AppButton
+                title={selectionMode ? "Exit Selection" : "Select Templates"}
+                variant="secondary"
+                onPress={() => {
+                  if (selectionMode) {
+                    clearSelection();
+                  } else {
+                    setSelectionMode(true);
+                  }
+                }}
+                style={styles.flexButton}
+              />
+
+              {selectionMode ? (
+                <StatusBadge
+                  label={`${selectedTemplateIds.length} selected`}
+                  tone="info"
+                />
+              ) : null}
+            </View>
+
+            {selectionMode && selectedTemplateIds.length > 0 ? (
+              <View style={styles.bulkActionsColumn}>
+                <AppButton
+                  title="Delete Selected"
+                  variant="danger"
+                  onPress={handleBulkDeleteTemplates}
+                />
+              </View>
+            ) : null}
+          </AppCard>
 
           <AppCard>
             <SectionHeader
@@ -299,6 +400,16 @@ export default function TemplatesScreen({ navigation }) {
                   </View>
 
                   <View style={styles.actionColumn}>
+                    {selectionMode ? (
+                      <AppButton
+                        title={
+                          selectedTemplateIds.includes(template.id) ? "Unselect" : "Select"
+                        }
+                        variant="secondary"
+                        onPress={() => toggleTemplateSelection(template.id)}
+                      />
+                    ) : null}
+
                     <AppButton
                       title="Quick Apply"
                       onPress={() =>
@@ -447,5 +558,24 @@ const styles = StyleSheet.create({
   },
   actionColumn: {
     gap: spacing.sm,
+  },
+  successCard: {
+    backgroundColor: "#f0fdf4",
+    borderColor: "#bbf7d0",
+  },
+  successText: {
+    color: "#166534",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  bulkTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  bulkActionsColumn: {
+    gap: spacing.sm,
+    marginTop: spacing.md,
   },
 });

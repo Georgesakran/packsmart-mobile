@@ -287,3 +287,11 @@ export const bulkUnarchiveTrips = async (tripIds = []) => {
   const response = await client.post("/trips/bulk-unarchive", { tripIds });
   return response.data;
 };
+
+export const bulkDeletePackingTemplates = async (templateIds = []) => {
+  const response = await client.post("/packing-templates/bulk-delete", {
+    templateIds,
+  });
+  return response.data;
+};
+
