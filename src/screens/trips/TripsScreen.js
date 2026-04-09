@@ -15,7 +15,7 @@ import AppButton from "../../components/common/AppButton";
 import StatusBadge from "../../components/common/StatusBadge";
 import SectionHeader from "../../components/common/SectionHeader";
 import EmptyState from "../../components/common/EmptyState";
-
+import { buildQuickInsightBadges } from "../../utils/buildQuickInsightBadges";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { Alert } from "react-native";
@@ -524,6 +524,8 @@ export default function TripsScreen({ navigation }) {
                       </Text>
                     </View>
 
+
+
                     <StatusBadge
                       label={`${trip.readinessScore}/100`}
                       tone={trip.readinessTone}
@@ -547,6 +549,16 @@ export default function TripsScreen({ navigation }) {
                       <Text style={styles.metaLabel}>Results: </Text>
                       {trip.hasResults ? "Yes" : "No"}
                     </Text>
+                  </View>
+
+                  <View style={styles.quickBadgesRow}>
+                    {buildQuickInsightBadges(trip).map((badge) => (
+                      <StatusBadge
+                        key={`${trip.id}-${badge.label}`}
+                        label={badge.label}
+                        tone={badge.tone}
+                      />
+                    ))}
                   </View>
                   {selectionMode ? (
                     <AppButton
@@ -731,5 +743,11 @@ const styles = StyleSheet.create({
   bulkActionsColumn: {
     gap: spacing.sm,
     marginTop: spacing.md,
+  },
+  quickBadgesRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
 });

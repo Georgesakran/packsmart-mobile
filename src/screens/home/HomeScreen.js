@@ -13,6 +13,7 @@ import AppButton from "../../components/common/AppButton";
 import StatusBadge from "../../components/common/StatusBadge";
 import SectionHeader from "../../components/common/SectionHeader";
 import EmptyState from "../../components/common/EmptyState";
+import { buildQuickInsightBadges } from "../../utils/buildQuickInsightBadges";
 
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
@@ -209,6 +210,15 @@ export default function HomeScreen({ navigation }) {
                     {insights.topTrip.hasResults ? "Ready" : "Not calculated"}
                   </Text>
                 </View>
+                <View style={styles.quickBadgesRow}>
+                  {buildQuickInsightBadges(insights.topTrip || {}).map((badge) => (
+                    <StatusBadge
+                      key={`top-${badge.label}`}
+                      label={badge.label}
+                      tone={badge.tone}
+                    />
+                  ))}
+                </View>
 
                 <View style={styles.focusButtons}>
                   <AppButton
@@ -300,6 +310,16 @@ export default function HomeScreen({ navigation }) {
                   </View>
 
                   <Text style={styles.tripRowHint}>{trip.nextAction}</Text>
+
+                  <View style={styles.quickBadgesRow}>
+                    {buildQuickInsightBadges(trip).map((badge) => (
+                      <StatusBadge
+                        key={`${trip.id}-${badge.label}`}
+                        label={badge.label}
+                        tone={badge.tone}
+                      />
+                    ))}
+                  </View>
 
                   <AppButton
                     title="Open"
@@ -512,5 +532,11 @@ const styles = StyleSheet.create({
   },
   openButton: {
     marginTop: 2,
+  },
+  quickBadgesRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
 });
