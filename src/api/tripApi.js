@@ -267,3 +267,8 @@ export const unarchiveTrip = async (tripId) => {
   const response = await client.put(`/trips/${tripId}/unarchive`);
   return response.data;
 };
+
+export const deleteTrip = async (tripId) => {
+  const response = await client.delete(`/trips/${tripId}`);
+  return response.data;
+};

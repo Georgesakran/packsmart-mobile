@@ -73,9 +73,12 @@ export default function EditTemplateScreen({ route, navigation }) {
   const handleDelete = () => {
     Alert.alert(
       "Delete Template",
-      "Are you sure you want to delete this template?",
+      `Are you sure you want to permanently delete "${template?.name || "this template"}"? This action cannot be undone.`,
       [
-        { text: "Cancel", style: "cancel" },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
         {
           text: "Delete",
           style: "destructive",
@@ -83,12 +86,24 @@ export default function EditTemplateScreen({ route, navigation }) {
             try {
               setDeleting(true);
               setError("");
-
-              await deletePackingTemplate(templateId);
-              navigation.goBack();
+  
+              const data = await deletePackingTemplate(templateId);
+  
+              Alert.alert(
+                "Template Deleted",
+                data?.message || "Template deleted successfully.",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => navigation.goBack(),
+                  },
+                ]
+              );
             } catch (err) {
               console.error("Delete template error:", err);
-              setError(err?.response?.data?.message || "Failed to delete template.");
+              setError(
+                err?.response?.data?.message || "Failed to delete template."
+              );
             } finally {
               setDeleting(false);
             }
@@ -158,7 +173,9 @@ export default function EditTemplateScreen({ route, navigation }) {
                 onPress={handleSave}
                 loading={saving}
               />
-
+              <Text style={styles.warningText}>
+                Deleting this template will remove it permanently from your account.
+              </Text>
               <AppButton
                 title="Delete Template"
                 variant="danger"
@@ -237,5 +254,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     color: colors.danger,
     fontSize: 14,
+  },
+  warningText: {
+    marginTop: spacing.lg,
+    fontSize: 13,
+    color: colors.danger,
+    lineHeight: 20,
   },
 });

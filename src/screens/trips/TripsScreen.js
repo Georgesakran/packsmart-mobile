@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,7 +18,7 @@ import EmptyState from "../../components/common/EmptyState";
 
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
-import { archiveTrip, duplicateTrip, unarchiveTrip, getTrips } from "../../api/tripApi";
+import { archiveTrip, duplicateTrip, unarchiveTrip, getTrips, deleteTrip } from "../../api/tripApi";
 
 import { useNotifications } from "../../context/NotificationsContext";
 
@@ -122,8 +123,8 @@ export default function TripsScreen({ navigation }) {
     } else if (filterBy === "no_results") {
       result = result.filter((trip) => !trip.hasResults);
     }
-    if (filterBy === "all") {
-      result = result.filter((trip) => (trip.status || "").toLowerCase() !== "archived");
+    if (filterBy === "archived") {
+      result = result.filter((trip) => (trip.status || "").toLowerCase() === "archived");
     }
 
     result.sort((a, b) => {
@@ -193,6 +194,38 @@ export default function TripsScreen({ navigation }) {
     }
   };
 
+  const handleDeleteTrip = (tripId, tripName) => {
+    Alert.alert(
+      "Delete Trip",
+      `Are you sure you want to permanently delete "${tripName || "this trip"}"? This action cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setError("");
+              setActionMessage("");
+  
+              const data = await deleteTrip(tripId);
+              setActionMessage(data?.message || "Trip deleted successfully.");
+  
+              await loadTrips();
+              await refreshNotifications();
+            } catch (err) {
+              console.error("Delete trip error:", err);
+              setError(err?.response?.data?.message || "Failed to delete trip.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <AppScreen>
@@ -214,10 +247,10 @@ export default function TripsScreen({ navigation }) {
             Search, sort, and filter your trips from one place.
           </Text>
           {actionMessage ? (
-              <AppCard style={styles.successCard}>
-                <Text style={styles.successText}>{actionMessage}</Text>
-              </AppCard>
-            ) : null}
+            <AppCard style={styles.successCard}>
+              <Text style={styles.successText}>{actionMessage}</Text>
+            </AppCard>
+          ) : null}
 
           <View style={styles.topActionsRow}>
             <AppButton
@@ -285,12 +318,7 @@ export default function TripsScreen({ navigation }) {
                 onPress={() => setSortBy("readiness_desc")}
                 style={styles.filterButton}
               />
-              <AppButton
-                title="Archived"
-                variant={filterBy === "archived" ? "primary" : "secondary"}
-                onPress={() => setFilterBy("archived")}
-                style={styles.filterButton}
-              />
+
             </View>
           </AppCard>
 
@@ -323,6 +351,12 @@ export default function TripsScreen({ navigation }) {
                 title="No Results"
                 variant={filterBy === "no_results" ? "primary" : "secondary"}
                 onPress={() => setFilterBy("no_results")}
+                style={styles.filterButton}
+              />
+              <AppButton
+                title="Archived"
+                variant={filterBy === "archived" ? "primary" : "secondary"}
+                onPress={() => setFilterBy("archived")}
                 style={styles.filterButton}
               />
             </View>
@@ -407,6 +441,12 @@ export default function TripsScreen({ navigation }) {
                         onPress={() => handleArchiveTrip(trip.id)}
                       />
                     )}
+
+                    <AppButton
+                      title="Delete"
+                      variant="danger"
+                      onPress={() => handleDeleteTrip(trip.id, trip.trip_name)}
+                    />
                   </View>
                 </AppCard>
               ))
