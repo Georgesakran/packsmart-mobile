@@ -295,3 +295,7 @@ export const bulkDeletePackingTemplates = async (templateIds = []) => {
   return response.data;
 };
 
+export const getTripActivityHistory = async (tripId) => {
+  const response = await client.get(`/trips/${tripId}/activity-history`);
+  return response.data;
+};

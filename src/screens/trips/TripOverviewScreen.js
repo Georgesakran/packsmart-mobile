@@ -23,6 +23,7 @@ import {
   getTripSuitcases,
   generateTripSuggestions,
   calculateTrip,
+  getTripActivityHistory,
 } from "../../api/tripApi";
 
 export default function TripOverviewScreen({ route, navigation }) {
@@ -39,6 +40,7 @@ export default function TripOverviewScreen({ route, navigation }) {
   const [actionError, setActionError] = useState("");
   const [generating, setGenerating] = useState(false);
   const [calculating, setCalculating] = useState(false);
+  const [activityHistory, setActivityHistory] = useState([]);
 
 
   const loadTripOverview = useCallback(async () => {
@@ -46,19 +48,22 @@ export default function TripOverviewScreen({ route, navigation }) {
       setLoading(true);
       setError("");
 
-      const [tripData, suitcasesData, itemsData, resultsData] =
-        await Promise.allSettled([
-          getTripById(tripId),
-          getTripSuitcases(tripId),
-          getTripItems(tripId),
-          getTripResults(tripId),
-        ]);
+      const [tripData, suitcasesData, itemsData, resultsData, activityData] =
+      await Promise.all([
+        getTripById(tripId),
+        getTripSuitcases(tripId),
+        getTripItems(tripId),
+        getTripResults(tripId),
+        getTripActivityHistory(tripId),
+      ]);
 
       if (tripData.status === "fulfilled") {
         setTrip(tripData.value);
       } else {
         throw tripData.reason;
       }
+
+      setActivityHistory(Array.isArray(activityData?.data) ? activityData.data : Array.isArray(activityData) ? activityData : []);
 
       setSuitcases(
         suitcasesData.status === "fulfilled" ? suitcasesData.value || [] : []
@@ -761,6 +766,36 @@ export default function TripOverviewScreen({ route, navigation }) {
 
           <AppCard style={styles.sectionCard}>
             <SectionHeader
+              title="Trip Progress History"
+              subtitle="A timeline of the main actions and changes for this trip."
+            />
+
+            {activityHistory.length === 0 ? (
+              <EmptyState
+                title="No activity yet"
+                description="This trip does not have any recorded history yet."
+              />
+            ) : (
+              activityHistory.slice(0, 8).map((event) => (
+                <View key={event.id} style={styles.activityRow}>
+                  <View style={styles.activityDot} />
+
+                  <View style={styles.activityContent}>
+                    <Text style={styles.activityTitle}>{event.title}</Text>
+                    {event.details ? (
+                      <Text style={styles.activityDetails}>{event.details}</Text>
+                    ) : null}
+                    <Text style={styles.activityDate}>
+                      {new Date(event.created_at).toLocaleString()}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            )}
+          </AppCard>
+
+          <AppCard style={styles.sectionCard}>
+            <SectionHeader
               title="Smart Action Center"
               subtitle="The most important next step for this trip right now."
             />
@@ -1192,6 +1227,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
     lineHeight: 20,
+  },
+
+  activityRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  activityDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: colors.primary,
+    marginTop: 6,
+  },
+  activityContent: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: 4,
+  },
+  activityDetails: {
+    fontSize: 13,
+    color: colors.textMuted,
+    lineHeight: 19,
+    marginBottom: 4,
+  },
+  activityDate: {
+    fontSize: 12,
+    color: colors.textMuted,
   },
 
 });
