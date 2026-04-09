@@ -768,7 +768,7 @@ export default function TripOverviewScreen({ route, navigation }) {
           <AppCard style={styles.sectionCard}>
             <SectionHeader
               title="Trip Progress History"
-              subtitle="A timeline of the main actions and changes for this trip."
+              subtitle={`Latest ${Math.min(activityHistory.length, 8)} recorded actions for this trip.`}
             />
 
             {activityHistory.length === 0 ? (
