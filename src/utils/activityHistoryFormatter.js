@@ -1,90 +1,48 @@
 export function getActivityEventMeta(eventType) {
     switch (eventType) {
       case "trip_created":
-        return {
-          label: "Trip Created",
-          tone: "success",
-        };
+        return { label: "Trip Created", tone: "success" };
   
       case "trip_duplicated":
-        return {
-          label: "Trip Duplicated",
-          tone: "info",
-        };
+        return { label: "Trip Duplicated", tone: "info" };
   
       case "trip_archived":
-        return {
-          label: "Trip Archived",
-          tone: "warning",
-        };
+        return { label: "Trip Archived", tone: "warning" };
   
       case "trip_restored":
-        return {
-          label: "Trip Restored",
-          tone: "success",
-        };
+        return { label: "Trip Restored", tone: "success" };
   
       case "template_applied":
-        return {
-          label: "Template Applied",
-          tone: "info",
-        };
+        return { label: "Template Applied", tone: "info" };
   
       case "template_saved_from_trip":
-        return {
-          label: "Saved as Template",
-          tone: "success",
-        };
+        return { label: "Saved as Template", tone: "success" };
   
       case "suggestions_generated":
-        return {
-          label: "Suggestions Generated",
-          tone: "info",
-        };
+        return { label: "Suggestions Ready", tone: "info" };
   
       case "trip_calculated":
-        return {
-          label: "Trip Calculated",
-          tone: "success",
-        };
+        return { label: "Calculation Complete", tone: "success" };
   
       case "checklist_updated":
-        return {
-          label: "Checklist Updated",
-          tone: "info",
-        };
+        return { label: "Checklist Updated", tone: "info" };
   
       case "travel_day_updated":
-        return {
-          label: "Travel Day Updated",
-          tone: "info",
-        };
+        return { label: "Travel Day Updated", tone: "info" };
   
       case "item_added":
-        return {
-          label: "Item Added",
-          tone: "success",
-        };
+        return { label: "Item Added", tone: "success" };
   
       default:
-        return {
-          label: "Trip Activity",
-          tone: "neutral",
-        };
+        return { label: "Trip Activity", tone: "neutral" };
     }
   }
-  
-  export function formatActivityDate(value) {
-    if (!value) return "—";
-  
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-  
-    return date.toLocaleString([], {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+
+  export function prettifyActivityDetails(details = "") {
+    return details
+      .replace(/wear_on_travel_day/g, "wear on travel day")
+      .replace(/keep_accessible/g, "keep accessible")
+      .replace(/skip/g, "skip")
+      .replace(/packed/g, "packed")
+      .replace(/pending/g, "pending");
   }

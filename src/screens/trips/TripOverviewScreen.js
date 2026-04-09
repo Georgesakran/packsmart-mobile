@@ -13,7 +13,12 @@ import AppButton from "../../components/common/AppButton";
 import AppCard from "../../components/common/AppCard";
 import StatusBadge from "../../components/common/StatusBadge";
 import SectionHeader from "../../components/common/SectionHeader";
-import { formatActivityDate, getActivityEventMeta, } from "../../utils/activityHistoryFormatter";
+import {
+  formatActivityDate,
+  getActivityEventMeta,
+  prettifyActivityDetails,
+} from "../../utils/activityHistoryFormatter";
+import { groupActivityHistory } from "../../utils/groupActivityHistory";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import { useNotifications } from "../../context/NotificationsContext";
@@ -42,6 +47,7 @@ export default function TripOverviewScreen({ route, navigation }) {
   const [generating, setGenerating] = useState(false);
   const [calculating, setCalculating] = useState(false);
   const [activityHistory, setActivityHistory] = useState([]);
+  const [showAllActivity, setShowAllActivity] = useState(false);
 
 
   const loadTripOverview = useCallback(async () => {
@@ -513,6 +519,14 @@ export default function TripOverviewScreen({ route, navigation }) {
     };
   }, [suitcases, items, results]);
 
+  const visibleActivityHistory = useMemo(() => {
+    return showAllActivity ? activityHistory : activityHistory.slice(0, 6);
+  }, [activityHistory, showAllActivity]);
+  
+  const groupedActivityHistory = useMemo(() => {
+    return groupActivityHistory(visibleActivityHistory);
+  }, [visibleActivityHistory]);
+
   if (loading) {
     return (
       <AppScreen>
@@ -768,7 +782,9 @@ export default function TripOverviewScreen({ route, navigation }) {
           <AppCard style={styles.sectionCard}>
             <SectionHeader
               title="Trip Progress History"
-              subtitle={`Latest ${Math.min(activityHistory.length, 8)} recorded actions for this trip.`}
+              subtitle={`Latest ${visibleActivityHistory.length} recorded action${
+                visibleActivityHistory.length === 1 ? "" : "s"
+              } for this trip.`}
             />
 
             {activityHistory.length === 0 ? (
@@ -777,46 +793,65 @@ export default function TripOverviewScreen({ route, navigation }) {
                 description="This trip does not have any recorded history yet."
               />
             ) : (
-              activityHistory.slice(0, 8).map((event, index) => {
-                const meta = getActivityEventMeta(event.event_type);
+              <>
+                {groupedActivityHistory.map((group) => (
+                  <View key={group.label} style={styles.activityGroup}>
+                    <Text style={styles.activityGroupTitle}>{group.label}</Text>
 
-                return (
-                  <View key={event.id} style={styles.activityRow}>
-                    <View style={styles.activityTimelineCol}>
-                      <View
-                        style={[
-                          styles.activityDot,
-                          meta.tone === "success"
-                            ? styles.activityDotSuccess
-                            : meta.tone === "warning"
-                            ? styles.activityDotWarning
-                            : meta.tone === "info"
-                            ? styles.activityDotInfo
-                            : styles.activityDotNeutral,
-                        ]}
-                      />
-                      {index !== activityHistory.slice(0, 8).length - 1 ? (
-                        <View style={styles.activityLine} />
-                      ) : null}
-                    </View>
+                    {group.events.map((event, index) => {
+                      const meta = getActivityEventMeta(event.event_type);
 
-                    <View style={styles.activityContent}>
-                      <View style={styles.activityHeaderRow}>
-                        <Text style={styles.activityTitle}>{meta.label}</Text>
-                        <StatusBadge label={meta.label} tone={meta.tone} />
-                      </View>
+                      return (
+                        <View key={event.id} style={styles.activityRow}>
+                          <View style={styles.activityTimelineCol}>
+                            <View
+                              style={[
+                                styles.activityDot,
+                                meta.tone === "success"
+                                  ? styles.activityDotSuccess
+                                  : meta.tone === "warning"
+                                  ? styles.activityDotWarning
+                                  : meta.tone === "info"
+                                  ? styles.activityDotInfo
+                                  : styles.activityDotNeutral,
+                              ]}
+                            />
+                            {index !== group.events.length - 1 ? (
+                              <View style={styles.activityLine} />
+                            ) : null}
+                          </View>
 
-                      {event.details ? (
-                        <Text style={styles.activityDetails}>{event.details}</Text>
-                      ) : null}
+                          <View style={styles.activityContent}>
+                            <View style={styles.activityHeaderRow}>
+                              <Text style={styles.activityTitle}>{meta.label}</Text>
+                              <StatusBadge label={meta.label} tone={meta.tone} />
+                            </View>
 
-                      <Text style={styles.activityDate}>
-                        {formatActivityDate(event.created_at)}
-                      </Text>
-                    </View>
+                            {event.details ? (
+                              <Text style={styles.activityDetails}>
+                                {prettifyActivityDetails(event.details)}
+                              </Text>
+                            ) : null}
+
+                            <Text style={styles.activityDate}>
+                              {formatActivityDate(event.created_at)}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
                   </View>
-                );
-              })
+                ))}
+
+                {activityHistory.length > 6 ? (
+                  <AppButton
+                    title={showAllActivity ? "Show Less" : "Show More"}
+                    variant="secondary"
+                    onPress={() => setShowAllActivity((prev) => !prev)}
+                    style={styles.showMoreButton}
+                  />
+                ) : null}
+              </>
             )}
           </AppCard>
 
@@ -1341,5 +1376,20 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   
+  activityGroup: {
+    marginTop: spacing.md,
+  },
+  
+  activityGroupTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: colors.textMuted,
+    textTransform: "uppercase",
+    marginBottom: spacing.sm,
+  },
+  
+  showMoreButton: {
+    marginTop: spacing.md,
+  },
 
 });
