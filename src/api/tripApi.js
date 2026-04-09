@@ -272,3 +272,18 @@ export const deleteTrip = async (tripId) => {
   const response = await client.delete(`/trips/${tripId}`);
   return response.data;
 };
+
+export const bulkDeleteTrips = async (tripIds = []) => {
+  const response = await client.post("/trips/bulk-delete", { tripIds });
+  return response.data;
+};
+
+export const bulkArchiveTrips = async (tripIds = []) => {
+  const response = await client.post("/trips/bulk-archive", { tripIds });
+  return response.data;
+};
+
+export const bulkUnarchiveTrips = async (tripIds = []) => {
+  const response = await client.post("/trips/bulk-unarchive", { tripIds });
+  return response.data;
+};

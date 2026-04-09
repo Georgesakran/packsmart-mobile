@@ -18,8 +18,17 @@ import EmptyState from "../../components/common/EmptyState";
 
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
-import { archiveTrip, duplicateTrip, unarchiveTrip, getTrips, deleteTrip } from "../../api/tripApi";
-
+import { Alert } from "react-native";
+import {
+  getTrips,
+  duplicateTrip,
+  archiveTrip,
+  unarchiveTrip,
+  deleteTrip,
+  bulkDeleteTrips,
+  bulkArchiveTrips,
+  bulkUnarchiveTrips,
+} from "../../api/tripApi";
 import { useNotifications } from "../../context/NotificationsContext";
 
 function normalizeTrip(trip) {
@@ -75,6 +84,9 @@ export default function TripsScreen({ navigation }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [filterBy, setFilterBy] = useState("all");
+
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedTripIds, setSelectedTripIds] = useState([]);
 
   const { refreshNotifications } = useNotifications();
   const [actionMessage, setActionMessage] = useState("");
@@ -226,6 +238,83 @@ export default function TripsScreen({ navigation }) {
     );
   };
 
+  const toggleTripSelection = (tripId) => {
+    setSelectedTripIds((prev) =>
+      prev.includes(tripId)
+        ? prev.filter((id) => id !== tripId)
+        : [...prev, tripId]
+    );
+  };
+  
+  const clearSelection = () => {
+    setSelectedTripIds([]);
+    setSelectionMode(false);
+  };
+
+  const handleBulkArchive = async () => {
+    try {
+      setError("");
+      setActionMessage("");
+  
+      const data = await bulkArchiveTrips(selectedTripIds);
+      setActionMessage(data?.message || "Selected trips archived successfully.");
+  
+      clearSelection();
+      await loadTrips();
+      await refreshNotifications();
+    } catch (err) {
+      console.error("Bulk archive trips error:", err);
+      setError(err?.response?.data?.message || "Failed to archive selected trips.");
+    }
+  };
+  
+  const handleBulkRestore = async () => {
+    try {
+      setError("");
+      setActionMessage("");
+  
+      const data = await bulkUnarchiveTrips(selectedTripIds);
+      setActionMessage(data?.message || "Selected trips restored successfully.");
+  
+      clearSelection();
+      await loadTrips();
+      await refreshNotifications();
+    } catch (err) {
+      console.error("Bulk restore trips error:", err);
+      setError(err?.response?.data?.message || "Failed to restore selected trips.");
+    }
+  };
+  
+  const handleBulkDelete = () => {
+    Alert.alert(
+      "Delete Selected Trips",
+      `Are you sure you want to permanently delete ${selectedTripIds.length} selected trip(s)? This action cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setError("");
+              setActionMessage("");
+  
+              const data = await bulkDeleteTrips(selectedTripIds);
+              setActionMessage(data?.message || "Selected trips deleted successfully.");
+  
+              clearSelection();
+              await loadTrips();
+              await refreshNotifications();
+            } catch (err) {
+              console.error("Bulk delete trips error:", err);
+              setError(err?.response?.data?.message || "Failed to delete selected trips.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <AppScreen>
@@ -271,6 +360,55 @@ export default function TripsScreen({ navigation }) {
               <Text style={styles.errorText}>{error}</Text>
             </AppCard>
           ) : null}
+
+          <AppCard>
+            <SectionHeader
+              title="Bulk Management"
+              subtitle="Select multiple trips and manage them together."
+            />
+
+            <View style={styles.bulkTopRow}>
+              <AppButton
+                title={selectionMode ? "Exit Selection" : "Select Trips"}
+                variant="secondary"
+                onPress={() => {
+                  if (selectionMode) {
+                    clearSelection();
+                  } else {
+                    setSelectionMode(true);
+                  }
+                }}
+                style={styles.flexButton}
+              />
+
+              {selectionMode ? (
+                <StatusBadge
+                  label={`${selectedTripIds.length} selected`}
+                  tone="info"
+                />
+              ) : null}
+            </View>
+
+            {selectionMode && selectedTripIds.length > 0 ? (
+              <View style={styles.bulkActionsColumn}>
+                <AppButton
+                  title="Archive Selected"
+                  variant="secondary"
+                  onPress={handleBulkArchive}
+                />
+                <AppButton
+                  title="Restore Selected"
+                  variant="secondary"
+                  onPress={handleBulkRestore}
+                />
+                <AppButton
+                  title="Delete Selected"
+                  variant="danger"
+                  onPress={handleBulkDelete}
+                />
+              </View>
+            ) : null}
+          </AppCard>
 
           <AppCard>
             <SectionHeader
@@ -410,6 +548,15 @@ export default function TripsScreen({ navigation }) {
                       {trip.hasResults ? "Yes" : "No"}
                     </Text>
                   </View>
+                  {selectionMode ? (
+                    <AppButton
+                      title={
+                        selectedTripIds.includes(trip.id) ? "Unselect" : "Select"
+                      }
+                      variant="secondary"
+                      onPress={() => toggleTripSelection(trip.id)}
+                    />
+                  ) : null}
 
                   <View style={styles.actionColumn}>
                     <AppButton
@@ -574,5 +721,15 @@ const styles = StyleSheet.create({
     color: "#166534",
     fontSize: 14,
     fontWeight: "600",
+  },
+  bulkTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  bulkActionsColumn: {
+    gap: spacing.sm,
+    marginTop: spacing.md,
   },
 });
