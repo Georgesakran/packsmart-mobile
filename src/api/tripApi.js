@@ -20,11 +20,6 @@ export const getTripItems = async (tripId) => {
   return response.data.data;
 };
 
-export const getTripResults = async (tripId) => {
-  const response = await client.get(`/trips/${tripId}/results`);
-  return response.data.data;
-};
-
 export const getTripChecklistSummary = async (tripId) => {
   const response = await client.get(`/trips/${tripId}/checklist-summary`);
   return response.data.data;
@@ -51,32 +46,13 @@ export const updateTripItemTravelDayMode = async (tripId, itemId, travelDayMode)
   return response.data.data;
 };
 
-export const createTrip = async ({
-  tripName,
-  destination,
-  durationDays,
-  travelType,
-  weatherType,
-  travelerCount,
-}) => {
-  const response = await client.post("/trips", {
-    tripName,
-    destination,
-    durationDays,
-    travelType,
-    weatherType,
-    travelerCount,
-  });
-  return response.data.data;
+export const createTrip = async (payload) => {
+  const response = await client.post("/trips", payload);
+  return response?.data?.data ?? response?.data;
 };
 
 export const generateTripSuggestions = async (tripId) => {
   const response = await client.post(`/trips/${tripId}/generate-suggestions`, {});
-  return response.data.data;
-};
-
-export const calculateTrip = async (tripId) => {
-  const response = await client.post(`/trips/${tripId}/calculate`, {});
   return response.data.data;
 };
 
@@ -111,32 +87,9 @@ export const createTripBag = async (
   return response.data.data;
 };
 
-export const createTripItem = async (
-  tripId,
-  {
-    customName,
-    quantity,
-    category,
-    sizeCode,
-    packBehavior,
-    baseVolumeCm3,
-    baseWeightG,
-    assignedBagId,
-  }
-) => {
-  const response = await client.post(`/trips/${tripId}/items`, {
-    sourceType: "custom",
-    customName,
-    quantity,
-    category,
-    sizeCode,
-    packBehavior,
-    baseVolumeCm3,
-    baseWeightG,
-    assignedBagId,
-  });
-
-  return response.data.data;
+export const createTripItem = async (tripId, payload) => {
+  const response = await client.post(`/trips/${tripId}/items`, payload);
+  return response?.data?.data ?? response?.data;
 };
 
 export const getPackingTemplates = async () => {
@@ -300,5 +253,100 @@ export const getTripActivityHistory = async (tripId) => {
   return response.data.data;
 };
 
+export const getAirlines = async () => {
+  const response = await client.get("/airlines");
+  return response?.data?.data ?? response?.data;
+};
 
+export const getBagCatalog = async () => {
+  const response = await client.get("/bags/catalog");
+  return response?.data?.data ?? response?.data;
+};
 
+export const getAirlineBaggageRules = async (airlineId) => {
+  const response = await client.get(`/airlines/${airlineId}/baggage-rules`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const recommendBagsForTrip = async (tripId) => {
+  const response = await client.get(`/trips/${tripId}/recommend-bags`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const saveSelectedTripBags = async (tripId, selectedBags) => {
+  const response = await client.post(`/trips/${tripId}/selected-bags`, {
+    selectedBags,
+  });
+  return response?.data?.data ?? response?.data;
+};
+
+export const getSelectedTripBags = async (tripId) => {
+  const response = await client.get(`/trips/${tripId}/selected-bags`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const getSuggestedItemsForTrip = async (tripId) => {
+  const response = await client.get(`/trips/${tripId}/suggested-items`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const applySuggestedItemsToTrip = async (
+  tripId,
+  items,
+  replaceExisting = true
+) => {
+  const response = await client.post(`/trips/${tripId}/apply-suggested-items`, {
+    items,
+    replaceExisting,
+  });
+  return response?.data?.data ?? response?.data;
+};
+export const calculateTrip = async (tripId) => {
+  const response = await client.post(`/trips/${tripId}/calculate`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const getTripResults = async (tripId) => {
+  const response = await client.get(`/trips/${tripId}/results`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const generatePackingSteps = async (tripId) => {
+  const response = await client.post(`/trips/${tripId}/generate-packing-steps`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const getPackingSteps = async (tripId) => {
+  const response = await client.get(`/trips/${tripId}/packing-steps`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const completePackingStep = async (tripId, stepId) => {
+  const response = await client.put(`/trips/${tripId}/packing-steps/${stepId}/complete`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const getCustomItems = async () => {
+  const response = await client.get("/custom-items");
+  return response?.data?.data ?? response?.data;
+};
+
+export const getCustomItemById = async (customItemId) => {
+  const response = await client.get(`/custom-items/${customItemId}`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const createCustomItem = async (payload) => {
+  const response = await client.post("/custom-items", payload);
+  return response?.data?.data ?? response?.data;
+};
+
+export const updateCustomItem = async (customItemId, payload) => {
+  const response = await client.put(`/custom-items/${customItemId}`, payload);
+  return response?.data?.data ?? response?.data;
+};
+
+export const deleteCustomItem = async (customItemId) => {
+  const response = await client.delete(`/custom-items/${customItemId}`);
+  return response?.data?.data ?? response?.data;
+};

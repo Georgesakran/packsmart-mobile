@@ -14,6 +14,13 @@ import ApplyTemplateScreen from "../screens/trips/ApplyTemplateScreen";
 import EditTripBagScreen from "../screens/trips/EditTripBagScreen";
 import EditTripItemScreen from "../screens/trips/EditTripItemScreen";
 import SaveTripAsTemplateScreen from "../screens/templates/SaveTripAsTemplateScreen";
+import CreateTripWizardScreen from "../screens/trips/CreateTripWizardScreen";
+import BagRecommendationScreen from "../screens/trips/BagRecommendationScreen";
+import SuggestedItemsScreen from "../screens/trips/SuggestedItemsScreen";
+import TripCalculationResultsScreen from "../screens/trips/TripCalculationResultsScreen";
+import GuidedPackingScreen from "../screens/trips/GuidedPackingScreen";
+import AddCustomItemScreen from "../screens/customItems/AddCustomItemScreen";
+import SavedCustomItemsScreen from "../screens/customItems/SavedCustomItemsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -92,6 +99,46 @@ export default function TripsStackNavigator() {
         name="SaveTripAsTemplate"
         component={SaveTripAsTemplateScreen}
         options={{ title: "Save as Template" }}
+      />
+
+      {/* V2 new app */}
+
+      <Stack.Screen
+        name="CreateTripWizard"
+        component={CreateTripWizardScreen}
+        options={{ title: "Create Trip" }}
+      />
+      <Stack.Screen
+        name="BagRecommendation"
+        component={BagRecommendationScreen}
+        options={{ title: "Bag Recommendation" }}
+      />
+      <Stack.Screen
+        name="SuggestedItems"
+        component={SuggestedItemsScreen}
+        options={{ title: "Suggested Items" }}
+      />
+      <Stack.Screen
+        name="TripCalculationResults"
+        component={TripCalculationResultsScreen}
+        options={{ title: "Packing Results" }}
+      />
+
+      <Stack.Screen
+        name="GuidedPacking"
+        component={GuidedPackingScreen}
+        options={{ title: "Guided Packing" }}
+      />
+      <Stack.Screen
+        name="AddCustomItem"
+        component={AddCustomItemScreen}
+        options={{ title: "Add Custom Item" }}
+      />
+
+      <Stack.Screen
+        name="SavedCustomItems"
+        component={SavedCustomItemsScreen}
+        options={{ title: "Saved Custom Items" }}
       />
 
     </Stack.Navigator>

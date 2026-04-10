@@ -33,6 +33,12 @@ export function getActivityEventMeta(eventType) {
       case "item_added":
         return { label: "Item Added", tone: "success" };
   
+      case "packing_steps_generated":
+        return {
+          label: "Packing Steps Ready",
+          tone: "success",
+       };
+       
       default:
         return { label: "Trip Activity", tone: "neutral" };
     }
