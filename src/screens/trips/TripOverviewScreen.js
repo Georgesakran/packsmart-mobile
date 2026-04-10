@@ -55,31 +55,21 @@ export default function TripOverviewScreen({ route, navigation }) {
     try {
       setLoading(true);
       setError("");
-
+  
       const [tripData, suitcasesData, itemsData, resultsData, activityData] =
-      await Promise.all([
-        getTripById(tripId),
-        getTripSuitcases(tripId),
-        getTripItems(tripId),
-        getTripResults(tripId),
-        getTripActivityHistory(tripId),
-      ]);
-
-      if (tripData.status === "fulfilled") {
-        setTrip(tripData.value);
-      } else {
-        throw tripData.reason;
-      }
-
-      setActivityHistory(Array.isArray(activityData?.data) ? activityData.data : Array.isArray(activityData) ? activityData : []);
-
-      setSuitcases(
-        suitcasesData.status === "fulfilled" ? suitcasesData.value || [] : []
-      );
-
-      setItems(itemsData.status === "fulfilled" ? itemsData.value || [] : []);
-
-      setResults(resultsData.status === "fulfilled" ? resultsData.value : null);
+        await Promise.all([
+          getTripById(tripId),
+          getTripSuitcases(tripId),
+          getTripItems(tripId),
+          getTripResults(tripId),
+          getTripActivityHistory(tripId),
+        ]);
+  
+      setTrip(tripData || null);
+      setSuitcases(Array.isArray(suitcasesData) ? suitcasesData : []);
+      setItems(Array.isArray(itemsData) ? itemsData : []);
+      setResults(resultsData || null);
+      setActivityHistory(Array.isArray(activityData) ? activityData : []);
     } catch (err) {
       console.error("Load trip overview error:", err);
       setError(err?.response?.data?.message || "Failed to load trip overview.");

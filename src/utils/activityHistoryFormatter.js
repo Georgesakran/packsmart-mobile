@@ -60,3 +60,14 @@ export function getActivityEventMeta(eventType) {
       .replace(/packed/g, "packed")
       .replace(/pending/g, "pending");
   }
+
+  export const formatActivityDate = (value) => {
+    if (!value) return "Unknown date";
+  
+    const date = new Date(value);
+  
+    if (Number.isNaN(date.getTime())) return "Unknown date";
+  
+    return date.toLocaleString();
+  };
+  
