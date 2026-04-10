@@ -2,32 +2,32 @@ import client from "./client";
 
 export const getTrips = async () => {
   const response = await client.get("/trips");
-  return response.data;
+  return response.data.data;
 };
 
 export const getTripById = async (tripId) => {
   const response = await client.get(`/trips/${tripId}`);
-  return response.data;
+  return response.data.data;
 };
 
 export const getTripSuitcases = async (tripId) => {
   const response = await client.get(`/trips/${tripId}/suitcases`);
-  return response.data;
+  return response.data.data;
 };
 
 export const getTripItems = async (tripId) => {
   const response = await client.get(`/trips/${tripId}/items`);
-  return response.data;
+  return response.data.data;
 };
 
 export const getTripResults = async (tripId) => {
   const response = await client.get(`/trips/${tripId}/results`);
-  return response.data;
+  return response.data.data;
 };
 
 export const getTripChecklistSummary = async (tripId) => {
   const response = await client.get(`/trips/${tripId}/checklist-summary`);
-  return response.data;
+  return response.data.data;
 };
 
 export const updateTripItemPackingStatus = async (tripId, itemId, packingStatus) => {
@@ -35,12 +35,12 @@ export const updateTripItemPackingStatus = async (tripId, itemId, packingStatus)
     `/trips/${tripId}/items/${itemId}/packing-status`,
     { packingStatus }
   );
-  return response.data;
+  return response.data.data;
 };
 
 export const getTripTravelDaySummary = async (tripId) => {
   const response = await client.get(`/trips/${tripId}/travel-day-summary`);
-  return response.data;
+  return response.data.data;
 };
 
 export const updateTripItemTravelDayMode = async (tripId, itemId, travelDayMode) => {
@@ -48,7 +48,7 @@ export const updateTripItemTravelDayMode = async (tripId, itemId, travelDayMode)
     `/trips/${tripId}/items/${itemId}/travel-day-mode`,
     { travelDayMode }
   );
-  return response.data;
+  return response.data.data;
 };
 
 export const createTrip = async ({
@@ -67,17 +67,17 @@ export const createTrip = async ({
     weatherType,
     travelerCount,
   });
-  return response.data;
+  return response.data.data;
 };
 
 export const generateTripSuggestions = async (tripId) => {
   const response = await client.post(`/trips/${tripId}/generate-suggestions`, {});
-  return response.data;
+  return response.data.data;
 };
 
 export const calculateTrip = async (tripId) => {
   const response = await client.post(`/trips/${tripId}/calculate`, {});
-  return response.data;
+  return response.data.data;
 };
 
 export const createTripBag = async (
@@ -108,7 +108,7 @@ export const createTripBag = async (
     isPrimary,
   });
 
-  return response.data;
+  return response.data.data;
 };
 
 export const createTripItem = async (
@@ -136,12 +136,12 @@ export const createTripItem = async (
     assignedBagId,
   });
 
-  return response.data;
+  return response.data.data;
 };
 
 export const getPackingTemplates = async () => {
   const response = await client.get("/packing-templates");
-  return response.data;
+  return response.data.data;
 };
 
 export const applyTemplateToTrip = async (
@@ -154,7 +154,7 @@ export const applyTemplateToTrip = async (
     { replaceExistingItems }
   );
 
-  return response.data;
+  return response.data.data;
 };
 
 export const updateTripBag = async (
@@ -186,12 +186,12 @@ export const updateTripBag = async (
     isPrimary,
   });
 
-  return response.data;
+  return response.data.data;
 };
 
 export const deleteTripBag = async (tripId, bagId) => {
   const response = await client.delete(`/trips/${tripId}/suitcases/${bagId}`);
-  return response.data;
+  return response.data.data;
 };
 
 export const updateTripItem = async (
@@ -220,82 +220,82 @@ export const updateTripItem = async (
     assignedBagId,
   });
 
-  return response.data;
+  return response.data.data;
 };
 
 export const deleteTripItem = async (tripId, itemId) => {
   const response = await client.delete(`/trips/${tripId}/items/${itemId}`);
-  return response.data;
+  return response.data.data;
 };
 
 export const getPackingTemplateById = async (templateId) => {
   const response = await client.get(`/packing-templates/${templateId}`);
-  return response.data;
+  return response.data.data;
 };
 
 export const createPackingTemplate = async (payload) => {
   const response = await client.post("/packing-templates", payload);
-  return response.data;
+  return response.data.data;
 };
 
 export const updatePackingTemplate = async (templateId, payload) => {
   const response = await client.put(`/packing-templates/${templateId}`, payload);
-  return response.data;
+  return response.data.data;
 };
 
 export const deletePackingTemplate = async (templateId) => {
   const response = await client.delete(`/packing-templates/${templateId}`);
-  return response.data;
+  return response.data.data;
 };
 
 export const saveTripAsTemplate = async (tripId, payload) => {
   const response = await client.post(`/packing-templates/from-trip/${tripId}`, payload);
-  return response.data;
+  return response.data.data;
 };
 
 export const duplicateTrip = async (tripId) => {
   const response = await client.post(`/trips/${tripId}/duplicate`);
-  return response.data;
+  return response.data.data;
 };
 
 export const archiveTrip = async (tripId) => {
   const response = await client.put(`/trips/${tripId}/archive`);
-  return response.data;
+  return response.data.data;
 };
 
 export const unarchiveTrip = async (tripId) => {
   const response = await client.put(`/trips/${tripId}/unarchive`);
-  return response.data;
+  return response.data.data;
 };
 
 export const deleteTrip = async (tripId) => {
   const response = await client.delete(`/trips/${tripId}`);
-  return response.data;
+  return response.data.data;
 };
 
 export const bulkDeleteTrips = async (tripIds = []) => {
   const response = await client.post("/trips/bulk-delete", { tripIds });
-  return response.data;
+  return response.data.data;
 };
 
 export const bulkArchiveTrips = async (tripIds = []) => {
   const response = await client.post("/trips/bulk-archive", { tripIds });
-  return response.data;
+  return response.data.data;
 };
 
 export const bulkUnarchiveTrips = async (tripIds = []) => {
   const response = await client.post("/trips/bulk-unarchive", { tripIds });
-  return response.data;
+  return response.data.data;
 };
 
 export const bulkDeletePackingTemplates = async (templateIds = []) => {
   const response = await client.post("/packing-templates/bulk-delete", {
     templateIds,
   });
-  return response.data;
+  return response.data.data;
 };
 
 export const getTripActivityHistory = async (tripId) => {
   const response = await client.get(`/trips/${tripId}/activity-history`);
-  return response.data;
+  return response.data.data;
 };
