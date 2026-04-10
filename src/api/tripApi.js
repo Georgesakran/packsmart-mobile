@@ -299,3 +299,6 @@ export const getTripActivityHistory = async (tripId) => {
   const response = await client.get(`/trips/${tripId}/activity-history`);
   return response.data.data;
 };
+
+
+
