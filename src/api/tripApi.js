@@ -350,3 +350,18 @@ export const deleteCustomItem = async (customItemId) => {
   const response = await client.delete(`/custom-items/${customItemId}`);
   return response?.data?.data ?? response?.data;
 };
+
+export const getItemSizeProfiles = async (itemId) => {
+  const response = await client.get(`/items/${itemId}/size-profiles`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const getItemFoldProfiles = async (itemId) => {
+  const response = await client.get(`/items/${itemId}/fold-profiles`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const updateTripItemProfile = async (tripId, tripItemId, payload) => {
+  const response = await client.put(`/trips/${tripId}/items/${tripItemId}/profile`, payload);
+  return response?.data?.data ?? response?.data;
+};

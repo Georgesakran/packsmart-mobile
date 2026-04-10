@@ -241,6 +241,16 @@ export default function TripItemsScreen({ route, navigation }) {
                     {item.removePriority || item.remove_priority || "medium"}
                   </Text>
                 </View>
+                <AppButton
+                  title="Edit Size & Fold"
+                  variant="secondary"
+                  onPress={() =>
+                    navigation.navigate("TripItemProfileEditor", {
+                      tripId,
+                      tripItem: item,
+                    })
+                  }
+                />
 
                 <AppButton
                   title="Edit Item"

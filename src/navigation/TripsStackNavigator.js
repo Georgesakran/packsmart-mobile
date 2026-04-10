@@ -21,6 +21,7 @@ import TripCalculationResultsScreen from "../screens/trips/TripCalculationResult
 import GuidedPackingScreen from "../screens/trips/GuidedPackingScreen";
 import AddCustomItemScreen from "../screens/customItems/AddCustomItemScreen";
 import SavedCustomItemsScreen from "../screens/customItems/SavedCustomItemsScreen";
+import TripItemProfileEditorScreen from "../screens/trips/TripItemProfileEditorScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -139,6 +140,12 @@ export default function TripsStackNavigator() {
         name="SavedCustomItems"
         component={SavedCustomItemsScreen}
         options={{ title: "Saved Custom Items" }}
+      />
+
+      <Stack.Screen
+        name="TripItemProfileEditor"
+        component={TripItemProfileEditorScreen}
+        options={{ title: "Item Profile" }}
       />
 
     </Stack.Navigator>
