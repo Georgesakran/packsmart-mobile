@@ -15,34 +15,13 @@ export const getTripSuitcases = async (tripId) => {
   return response.data.data;
 };
 
-export const getTripItems = async (tripId) => {
-  const response = await client.get(`/trips/${tripId}/items`);
-  return response.data.data;
-};
-
 export const getTripChecklistSummary = async (tripId) => {
   const response = await client.get(`/trips/${tripId}/checklist-summary`);
   return response.data.data;
 };
 
-export const updateTripItemPackingStatus = async (tripId, itemId, packingStatus) => {
-  const response = await client.put(
-    `/trips/${tripId}/items/${itemId}/packing-status`,
-    { packingStatus }
-  );
-  return response.data.data;
-};
-
 export const getTripTravelDaySummary = async (tripId) => {
   const response = await client.get(`/trips/${tripId}/travel-day-summary`);
-  return response.data.data;
-};
-
-export const updateTripItemTravelDayMode = async (tripId, itemId, travelDayMode) => {
-  const response = await client.put(
-    `/trips/${tripId}/items/${itemId}/travel-day-mode`,
-    { travelDayMode }
-  );
   return response.data.data;
 };
 
@@ -176,11 +155,6 @@ export const updateTripItem = async (
   return response.data.data;
 };
 
-export const deleteTripItem = async (tripId, itemId) => {
-  const response = await client.delete(`/trips/${tripId}/items/${itemId}`);
-  return response.data.data;
-};
-
 export const getPackingTemplateById = async (templateId) => {
   const response = await client.get(`/packing-templates/${templateId}`);
   return response.data.data;
@@ -308,8 +282,10 @@ export const calculateTrip = async (tripId) => {
 
 export const getTripResults = async (tripId) => {
   const response = await client.get(`/trips/${tripId}/results`);
-  return response?.data?.data ?? response?.data;
-};
+  if (response?.data && Object.prototype.hasOwnProperty.call(response.data, "data")) {
+    return response.data.data;
+  }
+  return response?.data;};
 
 export const generatePackingSteps = async (tripId) => {
   const response = await client.post(`/trips/${tripId}/generate-packing-steps`);
@@ -363,5 +339,48 @@ export const getItemFoldProfiles = async (itemId) => {
 
 export const updateTripItemProfile = async (tripId, tripItemId, payload) => {
   const response = await client.put(`/trips/${tripId}/items/${tripItemId}/profile`, payload);
+  return response?.data?.data ?? response?.data;
+};
+
+export const getTripItems = async (tripId) => {
+  const response = await client.get(`/trips/${tripId}/items`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const getTripItemsSummary = async (tripId) => {
+  const response = await client.get(`/trips/${tripId}/items-summary`);
+  return response?.data?.data ?? response?.data;
+};
+
+export const updateTripItemQuantity = async (tripId, tripItemId, quantity) => {
+  const response = await client.put(`/trips/${tripId}/items/${tripItemId}/quantity`, {
+    quantity,
+  });
+  return response?.data?.data ?? response?.data;
+};
+
+export const assignTripItemToBag = async (tripId, itemId, assignedBagId) => {
+  const response = await client.put(`/trips/${tripId}/items/${itemId}/assign-bag`, {
+    assignedBagId,
+  });
+  return response?.data?.data ?? response?.data;
+};
+
+export const updateTripItemTravelDayMode = async (tripId, itemId, travelDayMode) => {
+  const response = await client.put(`/trips/${tripId}/items/${itemId}/travel-day-mode`, {
+    travelDayMode,
+  });
+  return response?.data?.data ?? response?.data;
+};
+
+export const updateTripItemPackingStatus = async (tripId, itemId, packingStatus) => {
+  const response = await client.put(`/trips/${tripId}/items/${itemId}/packing-status`, {
+    packingStatus,
+  });
+  return response?.data?.data ?? response?.data;
+};
+
+export const deleteTripItem = async (tripId, tripItemId) => {
+  const response = await client.delete(`/trips/${tripId}/items/${tripItemId}`);
   return response?.data?.data ?? response?.data;
 };

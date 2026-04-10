@@ -131,7 +131,7 @@ export default function HomeScreen({ navigation }) {
                 title="Create Trip"
                 onPress={() =>
                   navigation.navigate("Trips", {
-                    screen: "CreateTrip",
+                    screen: "CreateTripWizard",
                   })
                 }
                 style={styles.flexButton}

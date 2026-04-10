@@ -343,7 +343,7 @@ export default function TripsScreen({ navigation }) {
           <View style={styles.topActionsRow}>
             <AppButton
               title="Create Trip"
-              onPress={() => navigation.navigate("CreateTrip")}
+              onPress={() => navigation.navigate("CreateTripWizard")}
               style={styles.flexButton}
             />
             <AppButton

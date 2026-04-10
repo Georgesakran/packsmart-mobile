@@ -38,6 +38,14 @@ export function getActivityEventMeta(eventType) {
           label: "Packing Steps Ready",
           tone: "success",
        };
+      case "item_quantity_updated":
+        return { label: "Quantity Updated", tone: "info" };
+
+      case "item_bag_updated":
+        return { label: "Bag Updated", tone: "info" };
+
+      case "item_removed":
+        return { label: "Item Removed", tone: "warning" };
        
       default:
         return { label: "Trip Activity", tone: "neutral" };
