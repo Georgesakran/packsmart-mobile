@@ -950,6 +950,10 @@ export default function TripOverviewScreen({ route, navigation }) {
                 variant="secondary"
               />
               <AppButton
+                title="Manage Trip Items"
+                onPress={() => navigation.navigate("TripItemsManagement", { tripId })}
+              />
+              <AppButton
                 title="Save as Template"
                 variant="secondary"
                 onPress={() =>

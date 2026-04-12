@@ -384,3 +384,4 @@ export const deleteTripItem = async (tripId, tripItemId) => {
   const response = await client.delete(`/trips/${tripId}/items/${tripItemId}`);
   return response?.data?.data ?? response?.data;
 };
+
