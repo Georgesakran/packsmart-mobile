@@ -1,5 +1,11 @@
 import React from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import colors from "../../theme/colors";
 
 export default function AppButton({
@@ -7,39 +13,63 @@ export default function AppButton({
   onPress,
   loading = false,
   disabled = false,
-  variant = "primary",
+  variant = "primary", // primary | secondary | danger
+  size = "md", // sm | md | lg
+  fullWidth = true,
   style,
   textStyle,
 }) {
   const isDisabled = disabled || loading;
 
+  const spinnerColor =
+    variant === "secondary" ? colors.text : "#ffffff";
+
   return (
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      style={[
+      style={({ pressed }) => [
         styles.base,
+        fullWidth && styles.fullWidth,
+
+        size === "sm" && styles.sizeSm,
+        size === "md" && styles.sizeMd,
+        size === "lg" && styles.sizeLg,
+
         variant === "primary" && styles.primary,
         variant === "secondary" && styles.secondary,
         variant === "danger" && styles.danger,
+
+        pressed && !isDisabled && styles.pressed,
         isDisabled && styles.disabled,
+
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "secondary" ? colors.text : "#fff"} />
+        <ActivityIndicator color={spinnerColor} />
       ) : (
-        <Text
-          style={[
-            styles.baseText,
-            variant === "primary" && styles.primaryText,
-            variant === "secondary" && styles.secondaryText,
-            variant === "danger" && styles.dangerText,
-            textStyle,
-          ]}
-        >
-          {title}
-        </Text>
+        <View style={styles.contentWrap}>
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.baseText,
+
+              size === "sm" && styles.textSm,
+              size === "md" && styles.textMd,
+              size === "lg" && styles.textLg,
+
+              variant === "primary" && styles.primaryText,
+              variant === "secondary" && styles.secondaryText,
+              variant === "danger" && styles.dangerText,
+
+              isDisabled && styles.disabledText,
+              textStyle,
+            ]}
+          >
+            {title}
+          </Text>
+        </View>
       )}
     </Pressable>
   );
@@ -47,35 +77,105 @@ export default function AppButton({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: 16,
     paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
   },
+
+  fullWidth: {
+    width: "100%",
+  },
+
+  sizeSm: {
+    minHeight: 40,
+    paddingVertical: 10,
+    borderRadius: 14,
+  },
+
+  sizeMd: {
+    minHeight: 48,
+    paddingVertical: 13,
+    borderRadius: 16,
+  },
+
+  sizeLg: {
+    minHeight: 56,
+    paddingVertical: 16,
+    borderRadius: 18,
+  },
+
   primary: {
     backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
   },
+
   secondary: {
-    backgroundColor: "#e2e8f0",
+    backgroundColor: "#f1f5f9",
+    borderWidth: 1,
+    borderColor: "#dbe3ee",
   },
+
   danger: {
     backgroundColor: colors.danger,
+    shadowColor: colors.danger,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
+
+  pressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.985 }],
+  },
+
   disabled: {
-    opacity: 0.7,
+    opacity: 0.58,
   },
+
+  contentWrap: {
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+  },
+
   baseText: {
+    fontWeight: "800",
+    textAlign: "center",
+    letterSpacing: 0.1,
+  },
+
+  textSm: {
+    fontSize: 13,
+  },
+
+  textMd: {
     fontSize: 15,
-    fontWeight: "700",
   },
+
+  textLg: {
+    fontSize: 16,
+  },
+
   primaryText: {
-    color: "#fff",
+    color: "#ffffff",
   },
+
   secondaryText: {
     color: colors.text,
   },
+
   dangerText: {
-    color: "#fff",
+    color: "#ffffff",
+  },
+
+  disabledText: {
+    opacity: 0.95,
   },
 });

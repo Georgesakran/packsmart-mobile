@@ -7,8 +7,10 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "plugins":[
-      "expo-notifications"
+    "plugins": [
+      "expo-notifications",
+      "@react-native-community/datetimepicker",
+      "expo-asset"
     ],
     "splash": {
       "image": "./assets/splash-icon.png",

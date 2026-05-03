@@ -1,113 +1,149 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, ScrollView } from "react-native";
 import AppScreen from "../../components/common/AppScreen";
 import AppCard from "../../components/common/AppCard";
 import AppButton from "../../components/common/AppButton";
 import SectionHeader from "../../components/common/SectionHeader";
+import StatusBadge from "../../components/common/StatusBadge";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import useAuth from "../../hooks/useAuth";
-import { usePushNotifications } from "../../context/PushNotificationsContext";
-import { useNotifications } from "../../context/NotificationsContext";
-import { buildReminderCandidates } from "../../utils/buildReminderCandidates";
-import { useNotificationPreferences } from "../../context/NotificationPreferencesContext";
 
-export default function ProfileScreen() {
-  const { preferences } = useNotificationPreferences();
-  const { logout } = useAuth();
-  const {
-    expoPushToken,
-    notificationPermission,
-    sendInstantLocalNotification,
-    scheduleLocalNotification,
-    cancelAllScheduledNotifications,
-    scheduleMultipleLocalReminders,
-  } = usePushNotifications();
-  
-  const { trips } = useNotifications();
+export default function ProfileScreen({ navigation }) {
+  const { logout, user } = useAuth();
 
   return (
     <AppScreen>
-      <View style={styles.container}>
-        <Text style={styles.title}>Profile</Text>
-        <Text style={styles.subtitle}>
-          Account, preferences, and notification readiness
-        </Text>
-
-        <AppCard>
-          <SectionHeader
-            title="Push Notifications"
-            subtitle="Foundation and readiness status for local and push notifications."
-          />
-
-          <Text style={styles.metaText}>
-            <Text style={styles.metaLabel}>Permission: </Text>
-            {notificationPermission}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.container}>
+          <Text style={styles.kicker}>PackSmart</Text>
+          <Text style={styles.title}>Profile</Text>
+          <Text style={styles.subtitle}>
+            Account access, app direction, and quick navigation.
           </Text>
 
-          <Text style={styles.metaText}>
-            <Text style={styles.metaLabel}>Push Token: </Text>
-            {expoPushToken ? "Available" : "Not available yet"}
-          </Text>
+          <AppCard style={styles.heroCard}>
+            <View style={styles.heroTopRow}>
+              <View style={styles.heroTextWrap}>
+                <Text style={styles.heroLabel}>Account Status</Text>
+                <Text style={styles.heroValue}>Signed In</Text>
+              </View>
 
-          <View style={styles.actionsColumn}>
-            <AppButton
-              title="Test Instant Notification"
-              onPress={() =>
-                sendInstantLocalNotification({
-                  title: "PackSmart Test",
-                  body: "This is a local notification test.",
-                })
-              }
+              <StatusBadge label="Active" tone="success" />
+            </View>
+
+            <Text style={styles.heroSubtext}>
+              Your PackSmart account is active and ready to use.
+            </Text>
+          </AppCard>
+
+          <AppCard>
+            <SectionHeader
+              title="Account"
+              subtitle="Basic signed-in account information."
             />
 
-            <AppButton
-              title="Test Reminder in 5 Seconds"
-              variant="secondary"
-              onPress={() =>
-                scheduleLocalNotification({
-                  title: "PackSmart Reminder",
-                  body: "This is a scheduled test reminder.",
-                  seconds: 5,
-                })
-              }
-            />
-            
-            <AppButton
-              title="Schedule Smart Trip Reminders"
-              variant="secondary"
-              onPress={async () => {
-                const reminders = buildReminderCandidates(trips, preferences);
-                await scheduleMultipleLocalReminders(reminders);
-              }}
+            <Text style={styles.metaText}>
+              <Text style={styles.metaLabel}>Status: </Text>
+              Signed in
+            </Text>
+
+            {user?.email ? (
+              <Text style={styles.metaText}>
+                <Text style={styles.metaLabel}>Email: </Text>
+                {user.email}
+              </Text>
+            ) : null}
+
+            {user?.username ? (
+              <Text style={styles.metaText}>
+                <Text style={styles.metaLabel}>Username: </Text>
+                {user.username}
+              </Text>
+            ) : null}
+          </AppCard>
+
+          <AppCard>
+            <SectionHeader
+              title="Quick Access"
+              subtitle="Jump into the main parts of the product."
             />
 
-            <AppButton
-              title="Cancel Scheduled Notifications"
-              variant="secondary"
-              onPress={cancelAllScheduledNotifications}
+            <View style={styles.actionsColumn}>
+              <AppButton
+                title="Open Trips"
+                onPress={() => navigation.navigate("Trips")}
+              />
+
+              <AppButton
+                title="Create Trip"
+                variant="secondary"
+                onPress={() =>
+                  navigation.navigate("Trips", {
+                    screen: "CreateTripWizard",
+                  })
+                }
+              />
+
+              <AppButton
+                title="Open Presets"
+                variant="secondary"
+                onPress={() =>
+                  navigation.navigate("Trips", {
+                    screen: "TravelPresets",
+                  })
+                }
+              />
+            </View>
+          </AppCard>
+
+          <AppCard>
+            <SectionHeader
+              title="App Status"
+              subtitle="What is currently active in this version of PackSmart."
             />
-          </View>
-        </AppCard>
 
-        <AppCard>
-          <SectionHeader
-            title="Account"
-            subtitle="Sign out of your PackSmart account."
-          />
+            <View style={styles.statusList}>
+              <Text style={styles.statusItem}>
+                • Core product focus: trips, packing flow, and presets.
+              </Text>
+              <Text style={styles.statusItem}>
+                • Notifications are currently paused during cleanup.
+              </Text>
+              <Text style={styles.statusItem}>
+                • Templates are not part of the current main app structure.
+              </Text>
+            </View>
+          </AppCard>
 
-          <AppButton title="Logout" variant="danger" onPress={logout} />
-        </AppCard>
-      </View>
+          <AppCard>
+            <SectionHeader
+              title="Session"
+              subtitle="Sign out from your PackSmart account."
+            />
+
+            <AppButton title="Logout" variant="danger" onPress={logout} />
+          </AppCard>
+        </View>
+      </ScrollView>
     </AppScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: spacing.xl,
+  },
   container: {
     flex: 1,
     padding: spacing.xl,
     gap: spacing.lg,
+  },
+  kicker: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.secondary,
+    textTransform: "uppercase",
   },
   title: {
     fontSize: 28,
@@ -117,6 +153,35 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: colors.textMuted,
+    lineHeight: 22,
+  },
+  heroCard: {
+    borderRadius: 20,
+  },
+  heroTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  heroTextWrap: {
+    flex: 1,
+  },
+  heroLabel: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginBottom: 8,
+  },
+  heroValue: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: colors.text,
+  },
+  heroSubtext: {
+    fontSize: 14,
+    color: colors.textMuted,
+    lineHeight: 22,
   },
   metaText: {
     fontSize: 14,
@@ -130,5 +195,13 @@ const styles = StyleSheet.create({
   actionsColumn: {
     gap: spacing.sm,
     marginTop: spacing.md,
+  },
+  statusList: {
+    gap: spacing.sm,
+  },
+  statusItem: {
+    fontSize: 14,
+    color: colors.textMuted,
+    lineHeight: 22,
   },
 });

@@ -1,8 +1,12 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+const BASE_URL = __DEV__
+  ? "http://192.168.31.111:5001/api" // local development
+  : "https://packsmart-backend.onrender.com/api"; // production deploy
+
 const client = axios.create({
-  baseURL: "https://packsmart-backend.onrender.com/api",
+  baseURL: BASE_URL,
   timeout: 30000,
 });
 
