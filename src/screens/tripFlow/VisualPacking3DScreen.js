@@ -280,15 +280,6 @@ export default function VisualPacking3DScreen({ route, navigation }) {
     return currentItem?.placementScore ?? null;
   }, [currentItem]);
 
-  useEffect(() => {
-    if (scene) {
-      console.log(
-        "FRONT SCENE INNER DIMS:",
-        scene?.primaryBag?.bag?.innerDimensionsCm
-      );
-    }
-  }, [scene]);
-  
   const currentItemCompression = useMemo(() => {
     if (currentItem?.compressionAppliedRatio == null) return null;
     return Math.round(Number(currentItem.compressionAppliedRatio) * 100);

@@ -203,22 +203,7 @@ export default function PackingCanvas({
     return <View style={styles.empty} />;
   }
 
-
-  // console.log("BAG INNER:", bagInner);
-  // console.log(
-  //   "SCENE ITEMS DEBUG:",
-  //   sceneItems.slice(0, 10).map((item) => ({
-  //     name: item.name,
-  //     sceneItemId: item.sceneItemId,
-  //     worldPosition: item.worldPosition,
-  //     worldSize: item.worldSize,
-  //     worldRotation: item.worldRotation,
-  //     category: item.category,
-  //   }))
-  // );
-
   
-
   return (
     <View style={styles.wrapper} {...panResponder.panHandlers}>
       <Canvas shadows={{ fov: 28, near: 0.01, far: 100, position: [0.8, 0.9, 1.4] }}>

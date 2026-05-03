@@ -274,14 +274,6 @@ export default function PackedItemMesh({ item }) {
     }
   });
 
-  console.log("PACKED ITEM MESH ACTIVE:", {
-    name: item?.name,
-    sceneItemId: item?.sceneItemId,
-    worldPosition: item?.worldPosition,
-    worldSize: item?.worldSize,
-    worldRotation: item?.worldRotation,
-  });
-
   return (
     <group
       ref={groupRef}
